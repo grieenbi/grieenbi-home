@@ -51,14 +51,6 @@ export const Header: React.FC<HeaderProps> = ({
               <span style={styles.userDivider}>|</span>
               <button 
                 type="button" 
-                onClick={onMyPageClick} 
-                style={{ ...styles.authLinkBtn, color: 'var(--accent-orange)' }}
-              >
-                내 작업실
-              </button>
-              <span style={styles.userDivider}>|</span>
-              <button 
-                type="button" 
                 onClick={onLogout} 
                 style={styles.authLinkBtn}
               >
