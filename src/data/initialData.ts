@@ -5,6 +5,8 @@ export interface EssaySentence {
   likes: number;
   isBest?: boolean;
   createdAt: string;
+  authorBio?: string;
+  authorJoinedAt?: string;
 }
 
 export interface RelayPrompt {

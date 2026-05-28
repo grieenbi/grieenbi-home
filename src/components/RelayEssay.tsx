@@ -17,6 +17,7 @@ interface RelayEssayProps {
   onBlockUser?: (email: string) => void;
   onUnblockUser?: (email: string) => void;
   onDeleteSentence?: (id: string) => void;
+  onShowReaderProfile?: (authorName: string) => void;
 }
 
 export const RelayEssay: React.FC<RelayEssayProps> = ({ 
@@ -32,7 +33,8 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
   blockedEmails = [],
   onBlockUser,
   onUnblockUser,
-  onDeleteSentence
+  onDeleteSentence,
+  onShowReaderProfile
 }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -127,7 +129,20 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
                         className="sentence-tooltip"
                         style={styles.tooltip}
                       >
-                        <span style={styles.tooltipAuthor}>BY. {sentence.author}</span>
+                        <span 
+                          style={{
+                            ...styles.tooltipAuthor,
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onShowReaderProfile) onShowReaderProfile(sentence.author);
+                          }}
+                          title={`${sentence.author} 작가의 프로필 및 작품집 보기`}
+                        >
+                          BY. {sentence.author}
+                        </span>
                         {sentence.isBest && (
                           <span style={styles.bestBadgeMini}>
                             👑 베스트 문장
@@ -308,7 +323,17 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
                         {/* Card metadata footer */}
                         <div style={styles.cardFooter}>
                           <div style={styles.cardAuthorRow}>
-                            <span style={styles.cardAuthor}>✒️ {sentence.author}</span>
+                            <span 
+                              style={{
+                                ...styles.cardAuthor,
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                              }}
+                              onClick={() => onShowReaderProfile && onShowReaderProfile(sentence.author)}
+                              title={`${sentence.author} 작가의 프로필 및 작품집 보기`}
+                            >
+                              ✒️ {sentence.author}
+                            </span>
                             {formattedDate && <span style={styles.cardDate}>{formattedDate}</span>}
                           </div>
                           
