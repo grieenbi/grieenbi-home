@@ -259,6 +259,13 @@ function App() {
     }));
   };
 
+  // Aggregate unique nicknames from existing relay sentences and mock fallback writers
+  const getExistingNicknames = (): string[] => {
+    const sentenceAuthors = promptData.sentences.map(s => s.author);
+    const mockWriters = ['은새', '북러버', '새벽감성', '그린비 작가', '그린비 작가님'];
+    return Array.from(new Set([...sentenceAuthors, ...mockWriters])).filter(Boolean);
+  };
+
   // Handler: Hero button click, scroll to relay form
   const handleJoinClick = () => {
     const el = document.getElementById('relay');
@@ -331,6 +338,7 @@ function App() {
         currentUser={currentUser}
         onProfileUpdate={handleProfileUpdate}
         onWithdrawSuccess={handleWithdrawSuccess}
+        existingNicknames={getExistingNicknames()}
       />
 
       {/* Reader Profile Modal */}

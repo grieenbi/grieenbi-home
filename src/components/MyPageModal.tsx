@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, AlignLeft, ShieldAlert, Award, Check } from 'lucide-react';
 import { updateProfile, deleteUser } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -10,6 +10,7 @@ interface MyPageModalProps {
   currentUser: { nickname: string; email: string } | null;
   onProfileUpdate: (newNickname: string) => void;
   onWithdrawSuccess: () => void;
+  existingNicknames: string[];
 }
 
 export const MyPageModal: React.FC<MyPageModalProps> = ({
@@ -18,12 +19,14 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
   currentUser,
   onProfileUpdate,
   onWithdrawSuccess,
+  existingNicknames,
 }) => {
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [showDuplicatePopup, setShowDuplicatePopup] = useState(false);
 
   // Sync state with current user and bio from localStorage when modal opens
   useEffect(() => {
@@ -35,6 +38,7 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
     setError('');
     setSuccess('');
     setShowWithdrawConfirm(false);
+    setShowDuplicatePopup(false);
   }, [currentUser, isOpen]);
 
   if (!isOpen || !currentUser) return null;
@@ -45,8 +49,20 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
     setError('');
     setSuccess('');
 
-    if (!nickname.trim()) {
+    const trimmedNickname = nickname.trim();
+
+    if (!trimmedNickname) {
       setError('변경할 필명을 입력해 주세요.');
+      return;
+    }
+
+    // Check duplicate nickname (excluding current user's nickname and ignoring case)
+    if (
+      currentUser &&
+      trimmedNickname.toLowerCase() !== currentUser.nickname.toLowerCase() &&
+      existingNicknames.some(name => name.toLowerCase() === trimmedNickname.toLowerCase())
+    ) {
+      setShowDuplicatePopup(true);
       return;
     }
 
@@ -54,14 +70,14 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
       const user = auth.currentUser;
       if (user) {
         // Update display name in Firebase Auth
-        await updateProfile(user, { displayName: nickname.trim() });
+        await updateProfile(user, { displayName: trimmedNickname });
       }
 
       // Save bio in localStorage
       localStorage.setItem(`grieenbi-bio-${currentUser.email}`, bio.trim());
 
       // Update parent state
-      onProfileUpdate(nickname.trim());
+      onProfileUpdate(trimmedNickname);
 
       setSuccess('프로필 설정이 정상적으로 반영되었습니다.');
       setTimeout(() => setSuccess(''), 2000);
@@ -254,6 +270,46 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* ⚠️ Duplicate Nickname Warning Popup */}
+        <AnimatePresence>
+          {showDuplicatePopup && (
+            <div style={styles.subModalOverlay}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.93, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 10 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                style={styles.subModalCard}
+              >
+                <div style={styles.subModalHeader}>
+                  <ShieldAlert size={26} style={{ color: 'var(--accent-orange)' }} />
+                  <h3 className="serif-title" style={styles.subModalTitle}>
+                    필명 중복 안내
+                  </h3>
+                </div>
+                
+                <div style={styles.subModalBody}>
+                  <p style={styles.subModalDesc}>
+                    독자님, 입력하신 <strong style={{ color: 'var(--accent-orange)' }}>'{nickname}'</strong> 필명은 이미 생각의 정원을 가꾸고 있는 다른 독자 작가님이 사용 중입니다.
+                  </p>
+                  <p style={styles.subModalSubDesc}>
+                    글을 사랑하는 이들 사이의 혼선을 방지하고, 고유한 문학적 목소리를 내기 위해 다른 개성 있는 필명을 선택해 주세요.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDuplicatePopup(false)}
+                  className="btn-primary"
+                  style={styles.subModalConfirmBtn}
+                >
+                  다른 필명 정하기
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
@@ -491,5 +547,71 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.35rem 0.75rem',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  subModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(4, 13, 33, 0.65)',
+    backdropFilter: 'blur(5px)',
+    zIndex: 1050,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: '16px',
+    padding: '1.5rem',
+  },
+  subModalCard: {
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '12px',
+    padding: '1.75rem',
+    maxWidth: '360px',
+    width: '100%',
+    boxShadow: '0 15px 40px rgba(10, 17, 40, 0.35)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    textAlign: 'center',
+  },
+  subModalHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  subModalTitle: {
+    fontSize: '1.15rem',
+    color: 'var(--text-primary)',
+    margin: 0,
+  },
+  subModalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem',
+    textAlign: 'center',
+  },
+  subModalDesc: {
+    fontSize: '0.85rem',
+    color: 'var(--text-primary)',
+    lineHeight: '1.5',
+    margin: 0,
+    wordBreak: 'keep-all',
+  },
+  subModalSubDesc: {
+    fontSize: '0.75rem',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.4',
+    margin: 0,
+    wordBreak: 'keep-all',
+  },
+  subModalConfirmBtn: {
+    width: '100%',
+    justifyContent: 'center',
+    borderRadius: '6px',
+    padding: '0.6rem',
+    fontSize: '0.8rem',
   },
 };
