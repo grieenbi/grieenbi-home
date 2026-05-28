@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, AlignLeft, ShieldAlert, Award, Check } from 'lucide-react';
+import { X, User, Mail, AlignLeft, ShieldAlert, Award, Check, BookOpen, Edit3 } from 'lucide-react';
 import { updateProfile, deleteUser } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -11,6 +11,8 @@ interface MyPageModalProps {
   onProfileUpdate: (newNickname: string) => void;
   onWithdrawSuccess: () => void;
   existingNicknames: string[];
+  mySentences: { id: string; content: string; likes: number }[];
+  onEditSentence: (sentenceId: string, newContent: string) => void;
 }
 
 export const MyPageModal: React.FC<MyPageModalProps> = ({
@@ -20,6 +22,8 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
   onProfileUpdate,
   onWithdrawSuccess,
   existingNicknames,
+  mySentences,
+  onEditSentence,
 }) => {
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
@@ -27,6 +31,9 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
   const [success, setSuccess] = useState('');
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [showDuplicatePopup, setShowDuplicatePopup] = useState(false);
+  const [editingSentenceId, setEditingSentenceId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [sentenceError, setSentenceError] = useState('');
 
   // Sync state with current user and bio from localStorage when modal opens
   useEffect(() => {
@@ -39,6 +46,9 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
     setSuccess('');
     setShowWithdrawConfirm(false);
     setShowDuplicatePopup(false);
+    setEditingSentenceId(null);
+    setEditingContent('');
+    setSentenceError('');
   }, [currentUser, isOpen]);
 
   if (!isOpen || !currentUser) return null;
@@ -228,6 +238,93 @@ export const MyPageModal: React.FC<MyPageModalProps> = ({
             </button>
           </div>
         </form>
+
+        {/* Contributed Sentences Management Section */}
+        <div style={styles.sentencesSection}>
+          <div style={styles.sentencesHeader}>
+            <BookOpen size={13} style={{ color: 'var(--accent-orange)' }} />
+            <span style={styles.sentencesTitle}>내가 기고한 이야기 조각 ({mySentences.length}개)</span>
+          </div>
+
+          <div style={styles.sentencesList}>
+            {mySentences.length === 0 ? (
+              <p style={styles.emptySentences}>아직 릴레이 에세이에 기고한 문장이 없습니다.</p>
+            ) : (
+              mySentences.map((s) => (
+                <div key={s.id} style={styles.sentenceItem}>
+                  {editingSentenceId === s.id ? (
+                    <div style={styles.editingContainer}>
+                      <textarea
+                        value={editingContent}
+                        onChange={(e) => {
+                          setEditingContent(e.target.value);
+                          if (sentenceError) setSentenceError('');
+                        }}
+                        style={styles.editTextArea}
+                        maxLength={100}
+                      />
+                      {sentenceError && <p style={styles.sentenceErrorText}>{sentenceError}</p>}
+                      <div style={styles.editActionRow}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmed = editingContent.trim();
+                            if (!trimmed) {
+                              setSentenceError('이야기 조각은 공백으로 둘 수 없습니다.');
+                              return;
+                            }
+                            const nonSpaceLength = trimmed.replace(/\s/g, '').length;
+                            if (nonSpaceLength > 50) {
+                              setSentenceError('문장은 최대 50자 이내(공백 제외)이어야 합니다.');
+                              return;
+                            }
+                            onEditSentence(s.id, trimmed);
+                            setEditingSentenceId(null);
+                          }}
+                          className="btn-primary"
+                          style={styles.editSaveBtn}
+                        >
+                          저장
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingSentenceId(null)}
+                          style={styles.editCancelBtn}
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={styles.sentenceDisplayRow}>
+                      <div style={styles.sentenceTextCol}>
+                        <p className="serif-title" style={styles.sentenceText}>
+                          "{s.content}"
+                        </p>
+                        <span style={styles.sentenceLikes}>
+                          ❤️ {s.likes}명의 독자가 공감함
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingSentenceId(s.id);
+                          setEditingContent(s.content);
+                          setSentenceError('');
+                        }}
+                        style={styles.sentenceEditBtn}
+                        title="이야기 조각 수정하기"
+                      >
+                        <Edit3 size={12} />
+                        <span>수정</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* Account Withdrawal Area */}
         <div style={styles.withdrawalBox}>
@@ -613,5 +710,133 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '6px',
     padding: '0.6rem',
     fontSize: '0.8rem',
+  },
+  sentencesSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    borderTop: '1px solid var(--grid-line)',
+    paddingTop: '1.25rem',
+    marginTop: '0.25rem',
+    textAlign: 'left',
+  },
+  sentencesHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+  },
+  sentencesTitle: {
+    fontSize: '0.75rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  sentencesList: {
+    maxHeight: '180px',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    paddingRight: '0.25rem',
+  },
+  emptySentences: {
+    fontSize: '0.8rem',
+    color: 'var(--text-tertiary)',
+    fontStyle: 'italic',
+    margin: 0,
+  },
+  sentenceItem: {
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '8px',
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sentenceDisplayRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
+  },
+  sentenceTextCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    flex: 1,
+  },
+  sentenceText: {
+    fontSize: '0.825rem',
+    color: 'var(--text-primary)',
+    lineHeight: '1.4',
+    margin: 0,
+    wordBreak: 'keep-all',
+  },
+  sentenceLikes: {
+    fontSize: '0.65rem',
+    color: 'var(--text-tertiary)',
+    fontWeight: 600,
+  },
+  sentenceEditBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.2rem',
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    color: 'var(--accent-orange)',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '4px',
+    padding: '0.25rem 0.5rem',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  editingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+    width: '100%',
+  },
+  editTextArea: {
+    width: '100%',
+    height: '60px',
+    padding: '0.5rem 0.75rem',
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '6px',
+    fontSize: '0.825rem',
+    color: 'var(--text-primary)',
+    transition: 'var(--transition-fast)',
+    boxSizing: 'border-box',
+    resize: 'none',
+    fontFamily: 'var(--font-sans)',
+    lineHeight: '1.4',
+  },
+  sentenceErrorText: {
+    color: 'var(--accent-orange)',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    margin: 0,
+  },
+  editActionRow: {
+    display: 'flex',
+    gap: '0.4rem',
+    justifyContent: 'flex-end',
+  },
+  editSaveBtn: {
+    padding: '0.25rem 0.75rem',
+    fontSize: '0.75rem',
+    borderRadius: '4px',
+  },
+  editCancelBtn: {
+    padding: '0.25rem 0.75rem',
+    fontSize: '0.75rem',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--grid-line)',
+    color: 'var(--text-secondary)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
   },
 };

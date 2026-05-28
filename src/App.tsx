@@ -250,6 +250,16 @@ function App() {
     }));
   };
 
+  // Handler: Edit sentence content in Relay Essay (User editing their own)
+  const handleEditSentence = (sentenceId: string, newContent: string) => {
+    setPromptData(prev => ({
+      ...prev,
+      sentences: prev.sentences.map(s => 
+        s.id === sentenceId ? { ...s, content: newContent } : s
+      )
+    }));
+  };
+
   // Handler: Update Relay Essay Topic (Admin only)
   const handleUpdatePrompt = (newTheme: string, newDescription: string) => {
     setPromptData(prev => ({
@@ -339,6 +349,8 @@ function App() {
         onProfileUpdate={handleProfileUpdate}
         onWithdrawSuccess={handleWithdrawSuccess}
         existingNicknames={getExistingNicknames()}
+        mySentences={promptData.sentences.filter(s => s.author === currentUser?.nickname)}
+        onEditSentence={handleEditSentence}
       />
 
       {/* Reader Profile Modal */}
