@@ -37,6 +37,19 @@ export const Footer: React.FC = () => {
             <Mail size={14} style={styles.icon} />
             <a href="mailto:foodyheo@gmail.com" style={styles.link}>foodyheo@gmail.com</a>
           </div>
+          
+          <div style={styles.qrContainer} data-guide-label="모바일 QR 간편 접속 (Footer - QR Code)">
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=26160f&bgcolor=f5f2eb&data=${encodeURIComponent('https://grieenbi-home.vercel.app')}`} 
+              alt="Grieenbi QR Access" 
+              style={styles.qrImage}
+            />
+            <div style={styles.qrTextContainer}>
+              <span style={styles.qrTitle}>MOBILE ARCHIVE ACCESS</span>
+              <p style={styles.qrDesc}>카메라로 스캔하여 모바일에서 간편 글쓰기와 가입을 즐겨보세요.</p>
+            </div>
+          </div>
+
           <button 
             type="button"
             onClick={handleScrollToTop} 
@@ -131,6 +144,41 @@ const styles: Record<string, React.CSSProperties> = {
     alignSelf: 'flex-start',
     padding: '0.5rem 1rem',
     fontSize: '0.75rem',
+  },
+  qrContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px dashed var(--grid-line)',
+    borderRadius: '10px',
+    padding: '0.85rem',
+    marginTop: '0.5rem',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+  },
+  qrImage: {
+    width: '72px',
+    height: '72px',
+    borderRadius: '6px',
+    border: '1px solid var(--grid-line)',
+  },
+  qrTextContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    textAlign: 'left',
+  },
+  qrTitle: {
+    fontSize: '0.65rem',
+    fontWeight: 800,
+    color: 'var(--accent-orange)',
+    letterSpacing: '0.08em',
+  },
+  qrDesc: {
+    fontSize: '0.7rem',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.4',
+    wordBreak: 'keep-all',
   },
   bottomBar: {
     padding: '1.5rem 2.5rem',

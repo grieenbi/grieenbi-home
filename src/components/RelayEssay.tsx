@@ -398,18 +398,34 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
           )
         ) : (
           <div style={styles.loginRequiredBox} data-guide-label="로그인 안내 박스 (RelayEssay - Login Required)">
-            <p style={styles.loginRequiredText}>
-              로그인 또는 회원가입을 하시면, 나만의 필명으로 함께 에세이를 이어 나갈 수 있습니다.
-            </p>
-            <button 
-              type="button" 
-              className="btn-primary" 
-              style={styles.loginBtn} 
-              onClick={onLoginClick}
-              data-guide-label="로그인/회원가입 버튼 (RelayEssay - Login Button)"
-            >
-              로그인 / 회원가입하고 이야기 잇기
-            </button>
+            <div style={styles.loginRequiredMain}>
+              <p style={styles.loginRequiredText}>
+                로그인 또는 회원가입을 하시면, 나만의 필명으로 함께 에세이를 이어 나갈 수 있습니다.
+              </p>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                style={styles.loginBtn} 
+                onClick={onLoginClick}
+                data-guide-label="로그인/회원가입 버튼 (RelayEssay - Login Button)"
+              >
+                로그인 / 회원가입하고 이야기 잇기
+              </button>
+            </div>
+            <div style={styles.loginRequiredQR} data-guide-label="모바일 QR 가입 위젯 (RelayEssay - Login QR)">
+              <div style={styles.qrWrapper}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&color=26160f&bgcolor=f5f2eb&data=${encodeURIComponent('https://grieenbi-home.vercel.app')}`} 
+                  alt="Grieenbi Easy Mobile QR Sign Up" 
+                  style={styles.qrCodeImage}
+                />
+                <span style={styles.qrScanLine} />
+              </div>
+              <div style={styles.qrLabel}>
+                <span style={styles.qrBadge}>Scan Me</span>
+                <span style={styles.qrLabelText}>모바일 QR 간편 가입</span>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -707,15 +723,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   loginRequiredBox: {
     display: 'flex',
-    flexDirection: 'column',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '2.5rem 1.5rem',
+    gap: '2rem',
     border: '2px dashed var(--grid-line)',
     borderRadius: '12px',
+    padding: '2rem',
     backgroundColor: 'var(--bg-secondary)',
-    gap: '1.2rem',
-    textAlign: 'center',
+    flexWrap: 'wrap',
     transition: 'var(--transition-fast)',
   },
   loginRequiredText: {
@@ -728,7 +743,71 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.65rem 1.5rem',
     fontSize: '0.85rem',
     fontWeight: 700,
-    borderRadius: '8px',
+    alignSelf: 'flex-start',
+  },
+  loginRequiredMain: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    textAlign: 'left',
+    minWidth: '280px',
+  },
+  loginRequiredQR: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.75rem',
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '10px',
+    padding: '1rem',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.02)',
+  },
+  qrWrapper: {
+    position: 'relative',
+    width: '90px',
+    height: '90px',
+    borderRadius: '6px',
+    border: '1px solid var(--grid-line)',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f5f2eb',
+  },
+  qrCodeImage: {
+    width: '80px',
+    height: '80px',
+  },
+  qrScanLine: {
+    position: 'absolute',
+    left: 0,
+    width: '100%',
+    height: '2px',
+    backgroundColor: 'var(--accent-orange)',
+    animation: 'scan 2s linear infinite',
+  },
+  qrLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.2rem',
+  },
+  qrBadge: {
+    fontSize: '0.6rem',
+    fontWeight: 800,
+    backgroundColor: 'var(--accent-green)',
+    color: '#0A1128',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '3px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  qrLabelText: {
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: 'var(--text-secondary)',
   },
   charCounter: {
     fontSize: '0.75rem',
@@ -1106,6 +1185,11 @@ if (typeof document !== 'undefined') {
     @keyframes blink {
       0%, 100% { opacity: 0; }
       50% { opacity: 1; }
+    }
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
     }
     .relay-sentence-span:hover {
       background-color: var(--accent-orange-light);
