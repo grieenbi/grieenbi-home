@@ -168,7 +168,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
       } else {
         // Log In with Firebase
         // Default Admin/Author mock account for testing convenience (local bypass)
-        if (email === 'grieenbi@example.com' && password === '1234') {
+        if (email === 'grieenbi@example.com' && password === 'Totoro0127@') {
           setSuccessMsg('작가님, 환영합니다!');
           setTimeout(() => {
             onAuthSuccess('그린비 작가', 'grieenbi@example.com');
