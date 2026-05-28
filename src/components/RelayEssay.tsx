@@ -100,101 +100,114 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
         </div>
         
         <div style={styles.flowContainer} data-guide-label="독자들이 이은 본문 글 (RelayEssay - Sentence Flow)">
-          <AnimatePresence initial={false}>
-            {[...promptData.sentences]
-              .sort((a, b) => b.likes - a.likes)
-              .slice(0, 5)
-              .map((sentence, index) => (
-                <motion.span
-                  key={sentence.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  style={styles.sentenceSpan}
-                  className="relay-sentence-span"
-                  onClick={() => setHoveredSentenceId(prev => prev === sentence.id ? null : sentence.id)}
-                >
-                  <span style={sentence.isBest ? styles.bestHighlight : {}}>
-                    {sentence.content}
-                  </span>
-                  
-                  {/* Popover metadata speech card on hover */}
-                  <AnimatePresence>
-                    {hoveredSentenceId === sentence.id && (
-                      <motion.span
-                        initial={{ opacity: 0, y: 10, scale: 0.95, x: '-50%' }}
-                        animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
-                        exit={{ opacity: 0, y: 8, scale: 0.95, x: '-50%' }}
-                        transition={{ duration: 0.12, ease: 'easeOut' }}
-                        className="sentence-tooltip"
-                        style={styles.tooltip}
-                      >
-                        <span 
-                          style={{
-                            ...styles.tooltipAuthor,
-                            cursor: 'pointer',
-                            textDecoration: 'underline',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onShowReaderProfile) onShowReaderProfile(sentence.author);
-                          }}
-                          title={`${sentence.author} 작가의 프로필 및 작품집 보기`}
-                        >
-                          BY. {sentence.author}
-                        </span>
-                        {sentence.isBest && (
-                          <span style={styles.bestBadgeMini}>
-                            👑 베스트 문장
-                          </span>
-                        )}
-                        <span style={styles.tooltipActions}>
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onLikeSentence(sentence.id);
-                            }} 
-                            style={styles.likeBtnMini}
+          {promptData.sentences.length > 0 ? (
+            <div className="essay-marquee-viewport">
+              <div 
+                className="essay-marquee-track"
+                style={{
+                  animationPlayState: hoveredSentenceId !== null ? 'paused' : 'running'
+                }}
+              >
+                {[
+                  ...[...promptData.sentences].sort((a, b) => b.likes - a.likes).slice(0, 5),
+                  ...[...promptData.sentences].sort((a, b) => b.likes - a.likes).slice(0, 5)
+                ].map((sentence, index, arr) => {
+                  const itemsCount = arr.length / 2;
+                  const key = `${sentence.id}-dup-${index >= itemsCount ? '2' : '1'}`;
+                  return (
+                    <div
+                      key={key}
+                      className="relay-sentence-block"
+                      onClick={() => setHoveredSentenceId(prev => prev === sentence.id ? null : sentence.id)}
+                    >
+                      <span style={sentence.isBest ? styles.bestHighlight : {}}>
+                        "{sentence.content}"
+                      </span>
+                      
+                      {/* Popover metadata speech card on hover/click */}
+                      <AnimatePresence>
+                        {hoveredSentenceId === sentence.id && (
+                          <motion.span
+                            initial={{ opacity: 0, y: 10, scale: 0.95, x: '-50%' }}
+                            animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95, x: '-50%' }}
+                            transition={{ duration: 0.12, ease: 'easeOut' }}
+                            className="sentence-tooltip"
+                            style={styles.tooltip}
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Heart 
-                              size={12} 
-                              fill={sentence.likes > 20 ? 'var(--accent-orange)' : 'transparent'} 
-                              color={sentence.likes > 20 ? 'var(--accent-orange)' : 'var(--bg-primary)'} 
-                            />
-                            <span>{sentence.likes}</span>
-                          </button>
-
-                          {(isAdmin || (currentUserNickname && sentence.author === currentUserNickname)) && onDeleteSentence && (
-                            <button
-                              type="button"
+                            <span 
+                              style={{
+                                ...styles.tooltipAuthor,
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm('이 이야기 조각을 정말 삭제하시겠습니까?')) {
-                                  onDeleteSentence(sentence.id);
-                                  setHoveredSentenceId(null);
-                                }
+                                if (onShowReaderProfile) onShowReaderProfile(sentence.author);
                               }}
-                              style={{
-                                ...styles.likeBtnMini,
-                                color: 'var(--accent-orange)',
-                                marginLeft: '0.75rem',
-                              }}
+                              title={`${sentence.author} 작가의 프로필 및 작품집 보기`}
                             >
-                              <Trash size={12} />
-                              <span>삭제</span>
-                            </button>
-                          )}
-                        </span>
-                        {/* Tooltip Triangle Arrow */}
-                        <span style={styles.tooltipArrow} />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.span>
-              ))}
-          </AnimatePresence>
-          <span style={styles.cursorBlink}>_</span>
+                              BY. {sentence.author}
+                            </span>
+                            {sentence.isBest && (
+                              <span style={styles.bestBadgeMini}>
+                                👑 베스트 문장
+                              </span>
+                            )}
+                            <span style={styles.tooltipActions}>
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onLikeSentence(sentence.id);
+                                }} 
+                                style={styles.likeBtnMini}
+                              >
+                                <Heart 
+                                  size={12} 
+                                  fill={sentence.likes > 20 ? 'var(--accent-orange)' : 'transparent'} 
+                                  color={sentence.likes > 20 ? 'var(--accent-orange)' : 'var(--bg-primary)'} 
+                                />
+                                <span>{sentence.likes}</span>
+                              </button>
+
+                              {(isAdmin || (currentUserNickname && sentence.author === currentUserNickname)) && onDeleteSentence && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('이 이야기 조각을 정말 삭제하시겠습니까?')) {
+                                      onDeleteSentence(sentence.id);
+                                      setHoveredSentenceId(null);
+                                    }
+                                  }}
+                                  style={{
+                                    ...styles.likeBtnMini,
+                                    color: 'var(--accent-orange)',
+                                    marginLeft: '0.75rem',
+                                  }}
+                                >
+                                  <Trash size={12} />
+                                  <span>삭제</span>
+                                </button>
+                              )}
+                            </span>
+                            {/* Tooltip Triangle Arrow */}
+                            <span style={styles.tooltipArrow} />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+              아직 작성된 문장이 없습니다. 아래 폼에서 첫 문장을 시작해 보세요! ✒️
+            </div>
+          )}
         </div>
       </div>
 
@@ -1237,6 +1250,49 @@ if (typeof document !== 'undefined') {
       0% { top: 0%; }
       50% { top: 100%; }
       100% { top: 0%; }
+    }
+    @keyframes verticalMarquee {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+    .essay-marquee-viewport {
+      height: 250px;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    }
+    .essay-marquee-track {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      animation: verticalMarquee 35s linear infinite;
+    }
+    .relay-sentence-block {
+      display: block;
+      padding: 0.95rem 1.4rem;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--grid-line);
+      border-left: 4px solid var(--accent-orange);
+      border-radius: 8px;
+      font-family: var(--font-serif);
+      font-size: 1.12rem;
+      line-height: 1.6;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition-fast);
+      box-shadow: 0 4px 15px rgba(10, 17, 40, 0.015);
+      box-sizing: border-box;
+      word-break: keep-all;
+      color: var(--text-primary);
+      text-align: left;
+    }
+    .relay-sentence-block:hover {
+      border-color: var(--accent-orange);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(10, 17, 40, 0.05);
+      background-color: var(--bg-secondary);
     }
     .relay-sentence-span:hover {
       background-color: var(--accent-orange-light);
