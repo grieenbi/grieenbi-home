@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
           : 'linear-gradient(rgba(4, 13, 33, 0.52), rgba(4, 13, 33, 0.68)), url("/rainy_bg.png")'
       }} className="header-main-brand" data-guide-label="빗방울 헤더 배너 이미지 (Header - Visual Banner)">
         <div style={styles.logoContainer} className="header-logo-container" data-guide-label="매거진 메인 브랜드 타이틀 로고 (Header - Brand Logo)">
-          <Feather size={48} style={styles.featherIcon} className="header-feather-icon" />
+          <Feather size={55} style={styles.featherIcon} className="header-feather-icon" />
           <h1 style={styles.logo} className="header-logo-text">GRIEENBI</h1>
         </div>
         <p style={styles.subtitle} className="header-subtitle-text">
@@ -238,7 +238,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--accent-green)',
   },
   logo: {
-    fontSize: '4.5rem',
+    fontSize: '5.2rem',
     fontFamily: 'var(--font-serif)',
     fontWeight: 700,
     letterSpacing: '-0.05em',
