@@ -54,16 +54,80 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
         }
       }
     } else {
-      // Simulated Kakao login for now as custom tokens/OIDC setup is needed for Firebase + Kakao
-      const mockNickname = '카카오 이웃';
-      const mockEmail = `kakao_user@example.com`;
+      try {
+        const Kakao = (window as any).Kakao;
+        if (!Kakao) {
+          setError('카카오 SDK가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
 
-      setSuccessMsg(`카카오 간편 로그인에 성공했습니다! (시뮬레이션)`);
-      setTimeout(() => {
-        onAuthSuccess(mockNickname, mockEmail);
-        setSuccessMsg('');
-        onClose();
-      }, 1200);
+        // Initialize Kakao SDK if not already done
+        if (!Kakao.isInitialized()) {
+          Kakao.init("4f4d8048cfa96dab2135106cc0ab38d9");
+        }
+
+        Kakao.Auth.login({
+          success: () => {
+            // Retrieve Kakao user profile details
+            Kakao.API.request({
+              url: '/v2/user/me',
+              success: async (res: any) => {
+                const kakaoId = res.id;
+                const nickname = res.properties?.nickname || '카카오 작가';
+                const email = res.kakao_account?.email || `kakao_${kakaoId}@grieenbi-kakao.com`;
+                
+                // Silent backend-less Firebase Auth matching
+                const silentPassword = `kakao_pwd_secure_${kakaoId}`;
+
+                try {
+                  // Attempt silent login
+                  const userCredential = await signInWithEmailAndPassword(auth, email, silentPassword);
+                  const user = userCredential.user;
+                  setSuccessMsg(`카카오 간편 로그인에 성공했습니다!`);
+                  setTimeout(() => {
+                    onAuthSuccess(user.displayName || nickname, user.email || email);
+                    setSuccessMsg('');
+                    onClose();
+                  }, 1200);
+                } catch (loginErr: any) {
+                  // If the user doesn't exist yet, silently sign them up in Firebase Auth
+                  if (loginErr.code === 'auth/user-not-found' || loginErr.code === 'auth/invalid-credential') {
+                    try {
+                      const userCredential = await createUserWithEmailAndPassword(auth, email, silentPassword);
+                      await updateProfile(userCredential.user, {
+                        displayName: nickname
+                      });
+                      setSuccessMsg(`카카오 간편 회원가입에 성공했습니다!`);
+                      setTimeout(() => {
+                        onAuthSuccess(nickname, email);
+                        setSuccessMsg('');
+                        onClose();
+                      }, 1200);
+                    } catch (signUpErr: any) {
+                      console.error(signUpErr);
+                      setError('카카오 계정 등록에 실패했습니다.');
+                    }
+                  } else {
+                    console.error(loginErr);
+                    setError('카카오 로그인 인증 중 오류가 발생했습니다.');
+                  }
+                }
+              },
+              fail: (err: any) => {
+                console.error(err);
+                setError('카카오 프로필 정보를 가져오지 못했습니다.');
+              }
+            });
+          },
+          fail: (err: any) => {
+            console.error(err);
+            setError('카카오 간편 로그인창이 닫혔거나 취소되었습니다.');
+          }
+        });
+      } catch (err: any) {
+        console.error(err);
+        setError('카카오톡 로그인 실행 중 오류가 발생했습니다.');
+      }
     }
   };
 
