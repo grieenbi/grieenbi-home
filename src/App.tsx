@@ -8,7 +8,19 @@ import { AuthModal } from './components/AuthModal';
 import { MyPageModal } from './components/MyPageModal';
 import { ReaderProfileModal } from './components/ReaderProfileModal';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
+import { 
+  collection, 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  orderBy,
+  getDocs,
+  writeBatch
+} from 'firebase/firestore';
 
 import { 
   initialRelayPrompt
@@ -82,6 +94,74 @@ function App() {
     return initialRelayPrompt;
   });
 
+  // Real-time synchronization with Cloud Firestore (for cross-device iOS & Web sync)
+  useEffect(() => {
+    // 1. Sync Active Prompt Theme & Description
+    const promptDocRef = doc(db, 'relay_prompts', 'prompt-1');
+    const unsubscribePrompt = onSnapshot(promptDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPromptData(prev => ({
+          ...prev,
+          theme: data.theme || prev.theme,
+          description: data.description || prev.description
+        }));
+      } else {
+        // Seed active prompt in Firestore if not already present
+        setDoc(promptDocRef, {
+          theme: initialRelayPrompt.theme,
+          description: initialRelayPrompt.description,
+          createdAt: initialRelayPrompt.createdAt
+        }).catch(err => console.error("Error seeding active prompt in Firestore: ", err));
+      }
+    });
+
+    // 2. Sync Relay Sentences in Real-time (including entries from iOS/mobile clients)
+    const sentencesColRef = collection(db, 'sentences');
+    const q = query(sentencesColRef, orderBy('createdAt', 'asc'));
+    const unsubscribeSentences = onSnapshot(q, (querySnapshot) => {
+      const sentencesList: EssaySentence[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        sentencesList.push({
+          id: docSnap.id,
+          author: data.author || '',
+          content: data.content || '',
+          likes: data.likes || 0,
+          createdAt: data.createdAt || new Date().toISOString(),
+          authorBio: data.authorBio || '',
+          authorJoinedAt: data.authorJoinedAt || ''
+        });
+      });
+
+      if (sentencesList.length > 0) {
+        setPromptData(prev => ({
+          ...prev,
+          sentences: sentencesList
+        }));
+      } else {
+        // Seed initial sentences into Firestore if DB is empty
+        const initialSentences = initialRelayPrompt.sentences;
+        initialSentences.forEach((s) => {
+          const docRef = doc(db, 'sentences', s.id);
+          setDoc(docRef, {
+            author: s.author,
+            content: s.content,
+            likes: s.likes,
+            createdAt: s.createdAt,
+            authorBio: s.authorBio || '시의 여백과 바람의 소리를 기록하는 방랑 에세이스트입니다.',
+            authorJoinedAt: s.authorJoinedAt || '2026.05.28'
+          }).catch(err => console.error("Error seeding initial sentence: ", err));
+        });
+      }
+    });
+
+    return () => {
+      unsubscribePrompt();
+      unsubscribeSentences();
+    };
+  }, []);
+
   // Blocked Users (Emails) State
   const [blockedEmails, setBlockedEmails] = useState<string[]>(() => {
     const saved = localStorage.getItem('grieenbi-blocked-emails');
@@ -124,29 +204,41 @@ function App() {
     localStorage.removeItem('grieenbi-current-user');
   };
 
-  const handleProfileUpdate = (newNickname: string) => {
+  const handleProfileUpdate = async (newNickname: string) => {
     if (currentUser) {
+      const oldNickname = currentUser.nickname;
       const updatedUser = { ...currentUser, nickname: newNickname };
       setCurrentUser(updatedUser);
       if (currentUser.email === 'grieenbi@example.com') {
         localStorage.setItem('grieenbi-current-user', JSON.stringify(updatedUser));
       }
 
-      // Sync written sentences with new nickname and bio
       const savedBio = localStorage.getItem(`grieenbi-bio-${currentUser.email}`) || '';
-      setPromptData(prev => ({
-        ...prev,
-        sentences: prev.sentences.map(s => {
-          if (s.author === currentUser.nickname) {
-            return {
-              ...s,
+
+      try {
+        const sentencesColRef = collection(db, 'sentences');
+        const qSnapshot = await getDocs(sentencesColRef);
+        
+        const batch = writeBatch(db);
+        let count = 0;
+        qSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.author === oldNickname) {
+            const docRef = doc(db, 'sentences', docSnap.id);
+            batch.update(docRef, {
               author: newNickname,
               authorBio: savedBio
-            };
+            });
+            count++;
           }
-          return s;
-        })
-      }));
+        });
+
+        if (count > 0) {
+          await batch.commit();
+        }
+      } catch (err) {
+        console.error("Error batch updating profile updates in Firestore: ", err);
+      }
     }
   };
 
@@ -212,61 +304,74 @@ function App() {
   };
 
   // Handler: Add sentence to Relay Essay
-  const handleAddSentence = (author: string, content: string) => {
+  const handleAddSentence = async (author: string, content: string) => {
     const savedBio = localStorage.getItem(`grieenbi-bio-${currentUser?.email}`) || '';
     const joinedDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\.$/, ''); // e.g. 2026.05.28
 
-    const newSentence: EssaySentence = {
-      id: `s-${Date.now()}`,
-      author,
-      content,
-      likes: 0,
-      createdAt: new Date().toISOString(),
-      authorBio: savedBio,
-      authorJoinedAt: joinedDate
-    };
-
-    setPromptData(prev => ({
-      ...prev,
-      sentences: [...prev.sentences, newSentence]
-    }));
+    try {
+      const sentenceId = `s-${Date.now()}`;
+      const docRef = doc(db, 'sentences', sentenceId);
+      await setDoc(docRef, {
+        author,
+        content,
+        likes: 0,
+        createdAt: new Date().toISOString(),
+        authorBio: savedBio,
+        authorJoinedAt: joinedDate
+      });
+    } catch (err) {
+      console.error("Error writing sentence to Firestore: ", err);
+    }
   };
 
   // Handler: Like a sentence in Relay Essay
-  const handleLikeSentence = (sentenceId: string) => {
-    setPromptData(prev => ({
-      ...prev,
-      sentences: prev.sentences.map(s => 
-        s.id === sentenceId ? { ...s, likes: s.likes + 1 } : s
-      )
-    }));
+  const handleLikeSentence = async (sentenceId: string) => {
+    try {
+      const sentenceDocRef = doc(db, 'sentences', sentenceId);
+      const target = promptData.sentences.find(s => s.id === sentenceId);
+      if (target) {
+        await updateDoc(sentenceDocRef, {
+          likes: target.likes + 1
+        });
+      }
+    } catch (err) {
+      console.error("Error updating likes in Firestore: ", err);
+    }
   };
 
   // Handler: Delete sentence in Relay Essay (Admin only)
-  const handleDeleteSentence = (sentenceId: string) => {
-    setPromptData(prev => ({
-      ...prev,
-      sentences: prev.sentences.filter(s => s.id !== sentenceId)
-    }));
+  const handleDeleteSentence = async (sentenceId: string) => {
+    try {
+      const sentenceDocRef = doc(db, 'sentences', sentenceId);
+      await deleteDoc(sentenceDocRef);
+    } catch (err) {
+      console.error("Error deleting sentence from Firestore: ", err);
+    }
   };
 
   // Handler: Edit sentence content in Relay Essay (User editing their own)
-  const handleEditSentence = (sentenceId: string, newContent: string) => {
-    setPromptData(prev => ({
-      ...prev,
-      sentences: prev.sentences.map(s => 
-        s.id === sentenceId ? { ...s, content: newContent } : s
-      )
-    }));
+  const handleEditSentence = async (sentenceId: string, newContent: string) => {
+    try {
+      const sentenceDocRef = doc(db, 'sentences', sentenceId);
+      await updateDoc(sentenceDocRef, {
+        content: newContent
+      });
+    } catch (err) {
+      console.error("Error updating sentence content in Firestore: ", err);
+    }
   };
 
   // Handler: Update Relay Essay Topic (Admin only)
-  const handleUpdatePrompt = (newTheme: string, newDescription: string) => {
-    setPromptData(prev => ({
-      ...prev,
-      theme: newTheme,
-      description: newDescription
-    }));
+  const handleUpdatePrompt = async (newTheme: string, newDescription: string) => {
+    try {
+      const promptDocRef = doc(db, 'relay_prompts', 'prompt-1');
+      await updateDoc(promptDocRef, {
+        theme: newTheme,
+        description: newDescription
+      });
+    } catch (err) {
+      console.error("Error updating prompt in Firestore: ", err);
+    }
   };
 
   // Aggregate unique nicknames from existing relay sentences and mock fallback writers
