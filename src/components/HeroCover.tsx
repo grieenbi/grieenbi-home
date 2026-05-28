@@ -8,6 +8,24 @@ interface HeroCoverProps {
   onJoinClick: () => void;
 }
 
+const getDynamicFontSize = (text: string) => {
+  const len = text.length;
+  if (len <= 15) return '2.2rem';
+  if (len <= 25) return '1.8rem';
+  if (len <= 35) return '1.5rem';
+  if (len <= 45) return '1.3rem';
+  return '1.15rem';
+};
+
+const getDynamicFontSizeMobile = (text: string) => {
+  const len = text.length;
+  if (len <= 15) return '1.6rem';
+  if (len <= 25) return '1.35rem';
+  if (len <= 35) return '1.2rem';
+  if (len <= 45) return '1.05rem';
+  return '0.95rem';
+};
+
 export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick }) => {
   const bestSentences = promptData.sentences.filter(s => s.isBest);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -90,7 +108,15 @@ export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick })
       transition={{ duration: 0.9, ease: [0.25, 0.8, 0.25, 1] }}
       style={styles.sentenceContainer}
     >
-                  <p className="serif-title" style={styles.bestSentenceText}>
+                  <p 
+                    className="serif-title best-sentence-text-dynamic" 
+                    style={{
+                      ...styles.bestSentenceText,
+                      '--best-font-size-desktop': getDynamicFontSize(activeSentence.content),
+                      '--best-font-size-mobile': getDynamicFontSizeMobile(activeSentence.content),
+                      marginBottom: activeSentence.content.length > 30 ? '0.8rem' : '1.8rem'
+                    } as React.CSSProperties}
+                  >
                     "{activeSentence.content}"
                   </p>
                   <motion.div 
@@ -301,6 +327,14 @@ if (typeof document !== 'undefined') {
       /* Mobile adjustment for Masterpiece text size */
       .bestSentenceText {
         font-size: clamp(1rem, 5vw, 2rem);
+      }
+      .best-sentence-text-dynamic {
+        font-size: var(--best-font-size-desktop) !important;
+      }
+      @media (max-width: 900px) {
+        .best-sentence-text-dynamic {
+          font-size: var(--best-font-size-mobile) !important;
+        }
       }
     }
   `;
