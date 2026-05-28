@@ -160,6 +160,10 @@ const styles: Record<string, React.CSSProperties> = {
   quoteWrapper: {
     margin: '2.5rem 0',
     position: 'relative',
+    height: '240px', // Prevent Cumulative Layout Shift (CLS)
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quoteIcon: {
     color: 'rgba(252, 185, 0, 0.15)', /* Transparent golden shine */
@@ -171,14 +175,13 @@ const styles: Record<string, React.CSSProperties> = {
     sentenceContainer: {
         position: 'relative',
         zIndex: 1,
-        minHeight: '6rem', // maintain minimum height
-        height: 'auto', // allow height to grow with content
+        height: '200px', // Fixed height to prevent size changes
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'visible', // show full text
+        overflow: 'hidden', // Prevent text overflow expansion
         whiteSpace: 'normal',
         textAlign: 'center',
         padding: '0 0.5rem',
