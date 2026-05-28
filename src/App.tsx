@@ -381,10 +381,16 @@ function App() {
     return Array.from(new Set([...sentenceAuthors, ...mockWriters])).filter(Boolean);
   };
 
-  // Handler: Hero button click, scroll to relay form
+  // Handler: Hero button click, scroll to relay form and focus text cursor instantly
   const handleJoinClick = () => {
     const el = document.getElementById('relay');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
+    
+    // Synchronously focus the textarea to trigger the mobile virtual keyboard reliably
+    const textarea = document.getElementById('relay-textarea');
+    if (textarea) {
+      textarea.focus();
+    }
   };
 
   return (

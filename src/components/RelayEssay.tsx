@@ -421,6 +421,7 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
 
               <div style={{ ...styles.textAreaWrapper, borderColor: isFocused ? 'var(--text-primary)' : 'var(--grid-line)' }} data-guide-label="에세이 문장 작성 창 (RelayEssay - Textarea)">
                 <textarea
+                  id="relay-textarea"
                   placeholder="여기에 소설의 다음 문장을 이어 써주세요. (최대 50자, 비속어나 타인에게 상처를 주는 문장은 필터링될 수 있습니다.)"
                   value={content}
                   onChange={(e) => {
