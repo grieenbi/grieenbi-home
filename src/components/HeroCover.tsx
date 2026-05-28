@@ -160,10 +160,6 @@ export const HeroCover: React.FC<HeroCoverProps> = ({
             </div>
           </div>
 
-          <button onClick={onJoinClick} className="btn-primary" style={styles.actionBtn} data-guide-label="에세이 잇기 버튼 (HeroCover - Action Button)">
-            <span>이 문장 뒤에 이어 쓰기</span>
-            <ArrowRight size={16} />
-          </button>
         </div>
 
         {/* Left Side: Weekly Cover Feature (Now Right) */}
@@ -171,6 +167,13 @@ export const HeroCover: React.FC<HeroCoverProps> = ({
           <div style={styles.coverHeader}>
             <span style={styles.magazineLabel}>Weekly Masterpiece</span>
             <div style={styles.lineDecorative} />
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.25rem', marginBottom: '-0.75rem', zIndex: 10 }}>
+            <button onClick={onJoinClick} className="btn-primary" style={styles.actionBtn} data-guide-label="에세이 잇기 버튼 (HeroCover - Action Button)">
+              <span>이 문장 뒤에 이어 쓰기</span>
+              <ArrowRight size={16} />
+            </button>
           </div>
           
           <div 
@@ -390,7 +393,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#FFFFFF', // solid pure white
   },
   actionBtn: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     boxShadow: '0 4px 20px rgba(252, 185, 0, 0.25)', // glowing gold accent shadow
     backgroundColor: 'var(--accent-orange)', // gold buttons for epic visibility!
     color: '#0A1128',
