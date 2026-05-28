@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, CornerRightDown, Award } from 'lucide-react';
+import { Heart, Send, CornerRightDown, Award, Trash, ShieldAlert } from 'lucide-react';
 import type { RelayPrompt } from '../data/initialData';
 
 interface RelayEssayProps {
@@ -10,7 +10,13 @@ interface RelayEssayProps {
   externalSentence?: string;
   onClearExternalSentence?: () => void;
   currentUserNickname?: string;
+  currentUserEmail?: string;
   onLoginClick?: () => void;
+  isAdmin?: boolean;
+  blockedEmails?: string[];
+  onBlockUser?: (email: string) => void;
+  onUnblockUser?: (email: string) => void;
+  onDeleteSentence?: (id: string) => void;
 }
 
 export const RelayEssay: React.FC<RelayEssayProps> = ({ 
@@ -20,7 +26,13 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
   externalSentence,
   onClearExternalSentence,
   currentUserNickname,
-  onLoginClick
+  currentUserEmail,
+  onLoginClick,
+  isAdmin = false,
+  blockedEmails = [],
+  onBlockUser,
+  onUnblockUser,
+  onDeleteSentence
 }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -29,6 +41,7 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
   const [hoveredSentenceId, setHoveredSentenceId] = useState<string | null>(null);
   const [showAllArchive, setShowAllArchive] = useState(false);
   const [archiveSortBy, setArchiveSortBy] = useState<'latest' | 'likes'>('likes');
+  const isBlocked = currentUserEmail !== undefined && blockedEmails.includes(currentUserEmail);
 
   React.useEffect(() => {
     if (externalSentence) {
@@ -136,6 +149,27 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
                             />
                             <span>{sentence.likes}</span>
                           </button>
+
+                          {isAdmin && onDeleteSentence && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('이 독자 문장을 삭제하시겠습니까?')) {
+                                  onDeleteSentence(sentence.id);
+                                  setHoveredSentenceId(null);
+                                }
+                              }}
+                              style={{
+                                ...styles.likeBtnMini,
+                                color: 'var(--accent-orange)',
+                                marginLeft: '0.75rem',
+                              }}
+                            >
+                              <Trash size={12} />
+                              <span>삭제</span>
+                            </button>
+                          )}
                         </span>
                         {/* Tooltip Triangle Arrow */}
                         <span style={styles.tooltipArrow} />
@@ -318,38 +352,50 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
         </div>
         
         {currentUserNickname ? (
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.inputGroupRow}>
-              <div style={styles.loggedInAuthor} data-guide-label="로그인한 필명 표시기 (RelayEssay - LoggedIn Author)">
-                작성자 : <span style={styles.authorBadge}>✒️ {currentUserNickname} 님</span>
+          isBlocked ? (
+            <div style={styles.blockedUserBanner} data-guide-label="차단 회원 경고 배너 (RelayEssay - Blocked User Notice)">
+              <ShieldAlert size={22} style={{ color: 'var(--accent-orange)' }} />
+              <div style={styles.blockedTextContainer}>
+                <h4 style={styles.blockedTitle}>활동 권한 제한 안내</h4>
+                <p style={styles.blockedDesc}>
+                  현재 회원님의 계정은 커뮤니티 가이드라인 위반 정책(부적절한 어휘 기고 등)에 의거하여 **글쓰기 기고 권한이 제한**되었습니다. 해제 관련 문의는 관리자에게 연락 바랍니다.
+                </p>
               </div>
-              <span style={styles.charCounter}>
-                {nonSpaceLength}/50자
-              </span>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={styles.form}>
+              <div style={styles.inputGroupRow}>
+                <div style={styles.loggedInAuthor} data-guide-label="로그인한 필명 표시기 (RelayEssay - LoggedIn Author)">
+                  작성자 : <span style={styles.authorBadge}>✒️ {currentUserNickname} 님</span>
+                </div>
+                <span style={styles.charCounter}>
+                  {nonSpaceLength}/50자
+                </span>
+              </div>
 
-            <div style={{ ...styles.textAreaWrapper, borderColor: isFocused ? 'var(--text-primary)' : 'var(--grid-line)' }} data-guide-label="에세이 문장 작성 창 (RelayEssay - Textarea)">
-              <textarea
-                placeholder="여기에 소설의 다음 문장을 이어 써주세요. (최대 50자, 비속어나 타인에게 상처를 주는 문장은 필터링될 수 있습니다.)"
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value);
-                  if(error) setError('');
-                }}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                style={styles.textarea}
-                maxLength={100}
-              />
-            </div>
+              <div style={{ ...styles.textAreaWrapper, borderColor: isFocused ? 'var(--text-primary)' : 'var(--grid-line)' }} data-guide-label="에세이 문장 작성 창 (RelayEssay - Textarea)">
+                <textarea
+                  placeholder="여기에 소설의 다음 문장을 이어 써주세요. (최대 50자, 비속어나 타인에게 상처를 주는 문장은 필터링될 수 있습니다.)"
+                  value={content}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if(error) setError('');
+                  }}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  style={styles.textarea}
+                  maxLength={100}
+                />
+              </div>
 
-            {error && <p style={styles.errorText}>{error}</p>}
+              {error && <p style={styles.errorText}>{error}</p>}
 
-            <button type="submit" className="btn-primary" style={styles.submitBtn} data-guide-label="이야기 잇기 전송 버튼 (RelayEssay - Submit Button)">
-              <span>이야기 잇기</span>
-              <Send size={14} />
-            </button>
-          </form>
+              <button type="submit" className="btn-primary" style={styles.submitBtn} data-guide-label="이야기 잇기 전송 버튼 (RelayEssay - Submit Button)">
+                <span>이야기 잇기</span>
+                <Send size={14} />
+              </button>
+            </form>
+          )
         ) : (
           <div style={styles.loginRequiredBox} data-guide-label="로그인 안내 박스 (RelayEssay - Login Required)">
             <p style={styles.loginRequiredText}>
@@ -367,6 +413,110 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
           </div>
         )}
       </div>
+
+      {/* 🛡️ Admin Control Center Widget */}
+      {isAdmin && (
+        <div style={styles.adminPanel} data-guide-label="관리자 제어 센터 (RelayEssay - Admin Control Center)">
+          <div style={styles.adminHeader}>
+            <ShieldAlert size={18} style={{ color: 'var(--accent-orange)' }} />
+            <h3 className="serif-title" style={styles.adminTitle}>그린비 관리자 제어 센터</h3>
+          </div>
+          
+          <div style={styles.adminGrid}>
+            {/* Blocked Users Section */}
+            <div style={styles.adminCol}>
+              <h4 style={styles.adminColTitle}>🚫 차단된 독자 목록 ({blockedEmails.length}명)</h4>
+              {blockedEmails.length === 0 ? (
+                <p style={styles.adminEmptyText}>현재 차단된 불량 독자가 없습니다.</p>
+              ) : (
+                <ul style={styles.adminList}>
+                  {blockedEmails.map((email) => (
+                    <li key={email} style={styles.adminListItem}>
+                      <span style={styles.adminUserEmail}>{email}</span>
+                      <button
+                        type="button"
+                        onClick={() => onUnblockUser && onUnblockUser(email)}
+                        style={styles.adminUnblockBtn}
+                      >
+                        차단 해제
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Content Moderation Section */}
+            <div style={styles.adminCol}>
+              <h4 style={styles.adminColTitle}>📝 실시간 에세이 문장 관리 ({promptData.sentences.length}개)</h4>
+              <div style={styles.adminSentenceScroll}>
+                {promptData.sentences.length === 0 ? (
+                  <p style={styles.adminEmptyText}>등록된 문장이 없습니다.</p>
+                ) : (
+                  <ul style={styles.adminList}>
+                    {promptData.sentences.map((s) => (
+                      <li key={s.id} style={styles.adminSentenceItem}>
+                        <div style={styles.adminSentenceMeta}>
+                          <span style={styles.adminSentenceAuthor}>✒️ {s.author}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm('이 문장을 정말로 즉시 삭제하시겠습니까?')) {
+                                onDeleteSentence && onDeleteSentence(s.id);
+                              }
+                            }}
+                            style={styles.adminDeleteBtnCard}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                        <p style={styles.adminSentenceText}>"{s.content}"</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Manual User Block Input Row */}
+          <div style={styles.adminManualBlockBar}>
+            <span style={styles.adminManualBlockLabel}>🚫 수동 독자 차단 등록 :</span>
+            <div style={styles.adminManualBlockInputGroup}>
+              <input
+                type="email"
+                id="admin-block-email-input"
+                placeholder="차단할 독자의 가입 이메일 주소 입력"
+                style={styles.adminBlockInput}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const target = e.currentTarget;
+                    if (target.value.trim() && onBlockUser) {
+                      onBlockUser(target.value.trim());
+                      alert(`${target.value.trim()} 회원이 차단되었습니다.`);
+                      target.value = '';
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('admin-block-email-input') as HTMLInputElement;
+                  if (el && el.value.trim() && onBlockUser) {
+                    onBlockUser(el.value.trim());
+                    alert(`${el.value.trim()} 회원이 차단되었습니다.`);
+                    el.value = '';
+                  }
+                }}
+                style={styles.adminBlockSubmitBtn}
+              >
+                독자 차단
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
@@ -761,6 +911,192 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     transition: 'transform var(--transition-fast)',
     marginLeft: 'auto',
+  },
+  blockedUserBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    border: '2px dashed var(--accent-orange)',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    backgroundColor: 'var(--bg-secondary)',
+  },
+  blockedTextContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    textAlign: 'left',
+  },
+  blockedTitle: {
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    color: 'var(--accent-orange)',
+  },
+  blockedDesc: {
+    fontSize: '0.85rem',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.5',
+    wordBreak: 'keep-all',
+  },
+  adminPanel: {
+    marginTop: '2rem',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--text-primary)',
+    borderRadius: '12px',
+    padding: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+    boxShadow: '0 8px 32px rgba(10, 17, 40, 0.08)',
+  },
+  adminHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    borderBottom: '1px solid var(--text-primary)',
+    paddingBottom: '0.75rem',
+  },
+  adminTitle: {
+    fontSize: '1.25rem',
+    color: 'var(--text-primary)',
+    letterSpacing: '0.02em',
+  },
+  adminGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '2rem',
+  },
+  adminCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  adminColTitle: {
+    fontSize: '0.9rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+  },
+  adminEmptyText: {
+    fontSize: '0.8rem',
+    color: 'var(--text-tertiary)',
+    fontStyle: 'italic',
+  },
+  adminList: {
+    listStyle: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  adminListItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '6px',
+  },
+  adminUserEmail: {
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+  },
+  adminUnblockBtn: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    color: 'var(--accent-green)',
+    border: '1px solid var(--accent-green)',
+    backgroundColor: 'transparent',
+    padding: '0.2rem 0.6rem',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  adminSentenceScroll: {
+    maxHeight: '200px',
+    overflowY: 'auto',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--bg-primary)',
+    padding: '0.75rem',
+  },
+  adminSentenceItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    borderBottom: '1px solid var(--grid-line)',
+    paddingBottom: '0.75rem',
+    marginBottom: '0.75rem',
+  },
+  adminSentenceMeta: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  adminSentenceAuthor: {
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: 'var(--accent-orange)',
+  },
+  adminDeleteBtnCard: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    color: 'var(--accent-orange)',
+    border: '1px solid var(--accent-orange)',
+    backgroundColor: 'transparent',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  adminSentenceText: {
+    fontSize: '0.8rem',
+    fontStyle: 'italic',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.4',
+  },
+  adminManualBlockBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTop: '1px dashed var(--grid-line)',
+    paddingTop: '1rem',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  adminManualBlockLabel: {
+    fontSize: '0.85rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    letterSpacing: '0.05em',
+  },
+  adminManualBlockInputGroup: {
+    display: 'flex',
+    gap: '0.5rem',
+    flex: 1,
+    maxWidth: '450px',
+  },
+  adminBlockInput: {
+    flex: 1,
+    padding: '0.5rem 0.75rem',
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+    color: 'var(--text-primary)',
+  },
+  adminBlockSubmitBtn: {
+    padding: '0.5rem 1rem',
+    backgroundColor: 'var(--text-primary)',
+    color: 'var(--bg-primary)',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
   },
 };
 

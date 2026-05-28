@@ -72,6 +72,30 @@ function App() {
     return initialRelayPrompt;
   });
 
+  // Blocked Users (Emails) State
+  const [blockedEmails, setBlockedEmails] = useState<string[]>(() => {
+    const saved = localStorage.getItem('grieenbi-blocked-emails');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  // Sync Blocked Emails to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('grieenbi-blocked-emails', JSON.stringify(blockedEmails));
+  }, [blockedEmails]);
+
+  const handleBlockUser = (email: string) => {
+    if (!blockedEmails.includes(email)) {
+      setBlockedEmails(prev => [...prev, email]);
+    }
+  };
+
+  const handleUnblockUser = (email: string) => {
+    setBlockedEmails(prev => prev.filter(e => e !== email));
+  };
+
   const handleAuthSuccess = (nickname: string, email: string) => {
     const user = { nickname, email };
     setCurrentUser(user);
@@ -139,6 +163,14 @@ function App() {
     }));
   };
 
+  // Handler: Delete sentence in Relay Essay (Admin only)
+  const handleDeleteSentence = (sentenceId: string) => {
+    setPromptData(prev => ({
+      ...prev,
+      sentences: prev.sentences.filter(s => s.id !== sentenceId)
+    }));
+  };
+
   // Handler: Hero button click, scroll to relay form
   const handleJoinClick = () => {
     const el = document.getElementById('relay');
@@ -175,7 +207,13 @@ function App() {
             externalSentence={externalSentence}
             onClearExternalSentence={() => setExternalSentence('')}
             currentUserNickname={currentUser ? currentUser.nickname : undefined}
+            currentUserEmail={currentUser ? currentUser.email : undefined}
             onLoginClick={() => setIsAuthModalOpen(true)}
+            isAdmin={currentUser !== null && (currentUser.email === 'foodyheo@gmail.com' || currentUser.email === 'grieenbi@example.com')}
+            blockedEmails={blockedEmails}
+            onBlockUser={handleBlockUser}
+            onUnblockUser={handleUnblockUser}
+            onDeleteSentence={handleDeleteSentence}
           />
         </div>
       </main>
