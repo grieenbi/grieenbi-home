@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Mail, Lock, User, Check, Eye, EyeOff } from 'lucide-react';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile,
+  signInWithPopup
+} from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -21,22 +28,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
 
   if (!isOpen) return null;
 
-  const handleSocialLogin = (platform: 'google' | 'kakao') => {
-    // Mimic social authentication
-    const mockNickname = platform === 'google' ? '구글독자' : '카카오이웃';
-    const mockEmail = `${platform}_user@example.com`;
-    
-    setSuccessMsg(`${platform.toUpperCase()} 간편 가입/로그인에 성공했습니다!`);
-    setTimeout(() => {
-      onAuthSuccess(mockNickname, mockEmail);
-      setSuccessMsg('');
-      onClose();
-    }, 1200);
+  const handleSocialLogin = async (platform: 'google' | 'kakao') => {
+    setError('');
+    setSuccessMsg('');
+
+    if (platform === 'google') {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        const displayName = user.displayName || '구글 작가';
+        const userEmail = user.email || '';
+
+        setSuccessMsg(`구글 간편 로그인에 성공했습니다!`);
+        setTimeout(() => {
+          onAuthSuccess(displayName, userEmail);
+          setSuccessMsg('');
+          onClose();
+        }, 1200);
+      } catch (err: any) {
+        console.error(err);
+        if (err.code === 'auth/popup-closed-by-user') {
+          setError('로그인 팝업이 닫혔습니다.');
+        } else {
+          setError('구글 로그인에 실패했습니다. 다시 시도해 주세요.');
+        }
+      }
+    } else {
+      // Simulated Kakao login for now as custom tokens/OIDC setup is needed for Firebase + Kakao
+      const mockNickname = '카카오 이웃';
+      const mockEmail = `kakao_user@example.com`;
+
+      setSuccessMsg(`카카오 간편 로그인에 성공했습니다! (시뮬레이션)`);
+      setTimeout(() => {
+        onAuthSuccess(mockNickname, mockEmail);
+        setSuccessMsg('');
+        onClose();
+      }, 1200);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
 
     if (!email.trim() || !password.trim()) {
       setError('이메일과 비밀번호를 입력해주세요.');
@@ -48,59 +82,71 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
       return;
     }
 
-    // LocalStorage Account Database
-    const savedUsers = localStorage.getItem('grieenbi-accounts');
-    let users = savedUsers ? JSON.parse(savedUsers) : [];
+    try {
+      if (mode === 'signup') {
+        // Sign Up with Firebase
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Update user display name (nickname) in Firebase Auth
+        await updateProfile(userCredential.user, {
+          displayName: nickname
+        });
 
-    if (mode === 'signup') {
-      // Sign Up Process
-      const userExists = users.some((u: any) => u.email === email);
-      if (userExists) {
-        setError('이미 등록된 이메일 주소입니다.');
-        return;
-      }
-
-      const newUser = { email, password, nickname };
-      users.push(newUser);
-      localStorage.setItem('grieenbi-accounts', JSON.stringify(users));
-
-      setSuccessMsg('축하합니다! 회원가입이 완료되었습니다.');
-      setTimeout(() => {
-        onAuthSuccess(nickname, email);
-        setSuccessMsg('');
-        setEmail('');
-        setPassword('');
-        setNickname('');
-        onClose();
-      }, 1500);
-    } else {
-      // Log In Process
-      const matchedUser = users.find((u: any) => u.email === email && u.password === password);
-      
-      // Default Admin/Author mock account for testing convenience
-      if (email === 'grieenbi@example.com' && password === '1234') {
-        setSuccessMsg('작가님, 환영합니다!');
+        setSuccessMsg('축하합니다! 회원가입이 완료되었습니다.');
         setTimeout(() => {
-          onAuthSuccess('그린비 작가', 'grieenbi@example.com');
+          onAuthSuccess(nickname, email);
           setSuccessMsg('');
+          setEmail('');
+          setPassword('');
+          setNickname('');
+          onClose();
+        }, 1500);
+      } else {
+        // Log In with Firebase
+        // Default Admin/Author mock account for testing convenience (local bypass)
+        if (email === 'grieenbi@example.com' && password === '1234') {
+          setSuccessMsg('작가님, 환영합니다!');
+          setTimeout(() => {
+            onAuthSuccess('그린비 작가', 'grieenbi@example.com');
+            setSuccessMsg('');
+            onClose();
+          }, 1200);
+          return;
+        }
+
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const userNickname = user.displayName || '그린비 독자';
+
+        setSuccessMsg(`${userNickname}님, 반가워요!`);
+        setTimeout(() => {
+          onAuthSuccess(userNickname, user.email || email);
+          setSuccessMsg('');
+          setEmail('');
+          setPassword('');
           onClose();
         }, 1200);
-        return;
       }
-
-      if (!matchedUser) {
-        setError('이메일 혹은 비밀번호가 일치하지 않습니다.');
-        return;
+    } catch (err: any) {
+      console.error(err);
+      switch (err.code) {
+        case 'auth/email-already-in-use':
+          setError('이미 등록된 이메일 주소입니다.');
+          break;
+        case 'auth/invalid-email':
+          setError('유효하지 않은 이메일 형식입니다.');
+          break;
+        case 'auth/weak-password':
+          setError('비밀번호가 너무 취약합니다. (6자 이상 필요)');
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          setError('이메일 혹은 비밀번호가 일치하지 않습니다.');
+          break;
+        default:
+          setError('로그인/회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
       }
-
-      setSuccessMsg(`${matchedUser.nickname}님, 반가워요!`);
-      setTimeout(() => {
-        onAuthSuccess(matchedUser.nickname, matchedUser.email);
-        setSuccessMsg('');
-        setEmail('');
-        setPassword('');
-        onClose();
-      }, 1200);
     }
   };
 

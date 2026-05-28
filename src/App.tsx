@@ -5,6 +5,8 @@ import { RelayEssay } from './components/RelayEssay';
 import { Generator } from './components/Generator';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 
 import { 
   initialRelayPrompt
@@ -30,14 +32,36 @@ function App() {
   });
 
   // Auth State
-  const [currentUser, setCurrentUser] = useState<{ nickname: string; email: string } | null>(() => {
-    const saved = localStorage.getItem('grieenbi-current-user');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<{ nickname: string; email: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Monitor Firebase Authentication State
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser({
+          nickname: user.displayName || '새내기작가',
+          email: user.email || ''
+        });
+      } else {
+        // Fallback to bypass admin check locally if saved in localStorage
+        const saved = localStorage.getItem('grieenbi-current-user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.email === 'grieenbi@example.com') {
+              setCurrentUser(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setCurrentUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Relay Essay State
   const [promptData, setPromptData] = useState<RelayPrompt>(() => {
@@ -51,10 +75,17 @@ function App() {
   const handleAuthSuccess = (nickname: string, email: string) => {
     const user = { nickname, email };
     setCurrentUser(user);
-    localStorage.setItem('grieenbi-current-user', JSON.stringify(user));
+    if (email === 'grieenbi@example.com') {
+      localStorage.setItem('grieenbi-current-user', JSON.stringify(user));
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
     setCurrentUser(null);
     localStorage.removeItem('grieenbi-current-user');
   };
