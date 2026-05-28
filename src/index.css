@@ -15,6 +15,7 @@
   --accent-green-light: rgba(0, 44, 108, 0.06);
   --accent-orange: #FCB900;    /* BCDME Glowing Amber Gold */
   --accent-orange-light: rgba(252, 185, 0, 0.08);
+  --relay-bg: #FAF6EE;         /* Beautiful Warm Bright Ivory background */
   
   --card-shadow: 0 4px 20px rgba(10, 17, 40, 0.015);
   --card-shadow-hover: 0 12px 30px rgba(10, 17, 40, 0.045);
@@ -43,6 +44,7 @@
   --accent-green-light: rgba(0, 163, 224, 0.12);
   --accent-orange: #FCB900;    /* Amber Gold Accent */
   --accent-orange-light: rgba(252, 185, 0, 0.12);
+  --relay-bg: #15120E;         /* Premium deep dark warm ivory/sepia background */
   
   --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   --card-shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.4);

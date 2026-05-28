@@ -602,6 +602,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
+    backgroundColor: 'var(--relay-bg)',
+    transition: 'background-color 0.3s ease',
   },
   header: {
     display: 'flex',
@@ -633,7 +635,7 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: '800px',
   },
   essayPaper: {
-    backgroundColor: 'var(--bg-secondary)',
+    backgroundColor: 'var(--bg-primary)',
     border: '1px solid var(--grid-line)',
     padding: '2.5rem',
     position: 'relative',
@@ -789,7 +791,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px dashed var(--grid-line)',
     borderRadius: '12px',
     padding: '2rem',
-    backgroundColor: 'var(--bg-secondary)',
+    backgroundColor: 'var(--bg-primary)',
     flexWrap: 'wrap',
     transition: 'var(--transition-fast)',
   },
