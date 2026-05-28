@@ -10,20 +10,20 @@ interface HeroCoverProps {
 
 const getDynamicFontSize = (text: string) => {
   const len = text.length;
-  if (len <= 15) return '2.2rem';
-  if (len <= 25) return '1.8rem';
-  if (len <= 35) return '1.5rem';
-  if (len <= 45) return '1.3rem';
-  return '1.15rem';
+  if (len <= 15) return '2.0rem';
+  if (len <= 25) return '1.65rem';
+  if (len <= 35) return '1.4rem';
+  if (len <= 45) return '1.2rem';
+  return '1.05rem';
 };
 
 const getDynamicFontSizeMobile = (text: string) => {
   const len = text.length;
-  if (len <= 15) return '1.6rem';
-  if (len <= 25) return '1.35rem';
-  if (len <= 35) return '1.2rem';
-  if (len <= 45) return '1.05rem';
-  return '0.95rem';
+  if (len <= 15) return '1.4rem';
+  if (len <= 25) return '1.2rem';
+  if (len <= 35) return '1.05rem';
+  if (len <= 45) return '0.95rem';
+  return '0.85rem';
 };
 
 export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick }) => {
@@ -190,6 +190,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible', // Ensure contents can render slightly outside without clipping
   },
   quoteIcon: {
     color: 'rgba(252, 185, 0, 0.15)', /* Transparent golden shine */
@@ -201,13 +202,14 @@ const styles: Record<string, React.CSSProperties> = {
     sentenceContainer: {
         position: 'relative',
         zIndex: 1,
-        height: '200px', // Fixed height to prevent size changes
+        minHeight: '200px', // Maintain minimum height
+        height: 'auto', // Allow it to size naturally so it doesn't clip
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden', // Prevent text overflow expansion
+        overflow: 'visible', // NEVER chop off text at top or bottom
         whiteSpace: 'normal',
         textAlign: 'center',
         padding: '0 0.5rem',
