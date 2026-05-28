@@ -439,6 +439,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
+    maxHeight: '90vh',
+    overflowY: 'auto',
   },
   closeBtn: {
     position: 'absolute',
