@@ -34,7 +34,7 @@ export const HeroCover: React.FC<HeroCoverProps> = ({
   isAdmin = false,
   onUpdatePrompt
 }) => {
-  const bestSentences = promptData.sentences.filter(s => s.isBest);
+  const bestSentences = promptData.sentences.filter(s => s.likes >= 10);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
