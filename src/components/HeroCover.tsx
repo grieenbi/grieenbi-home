@@ -6,6 +6,8 @@ import type { RelayPrompt, EssaySentence } from '../data/initialData';
 interface HeroCoverProps {
   promptData: RelayPrompt;
   onJoinClick: () => void;
+  isAdmin?: boolean;
+  onUpdatePrompt?: (theme: string, description: string) => void;
 }
 
 const getDynamicFontSize = (text: string) => {
@@ -26,10 +28,24 @@ const getDynamicFontSizeMobile = (text: string) => {
   return '0.75rem';
 };
 
-export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick }) => {
+export const HeroCover: React.FC<HeroCoverProps> = ({ 
+  promptData, 
+  onJoinClick,
+  isAdmin = false,
+  onUpdatePrompt
+}) => {
   const bestSentences = promptData.sentences.filter(s => s.isBest);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTheme, setEditTheme] = useState(promptData.theme);
+  const [editDesc, setEditDesc] = useState(promptData.description);
+
+  // Sync edits if promptData changes from outside
+  useEffect(() => {
+    setEditTheme(promptData.theme);
+    setEditDesc(promptData.description);
+  }, [promptData.theme, promptData.description]);
 
   // Rotate best sentences if multiple exist and not paused
   useEffect(() => {
@@ -48,19 +64,90 @@ export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick })
         {/* Right Side: Creative Spark & Prompt Intro (Now Left) */}
         <div style={styles.promptPanel} data-guide-label="에세이 주제 소개 패널 (HeroCover - Prompt Panel)">
           <div style={styles.sparkBadgeContainer}>
-            <div className="badge badge-orange">
-              <Sparkles size={12} />
-              <span>릴레이 에세이 주제</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <div className="badge badge-orange">
+                <Sparkles size={12} />
+                <span>릴레이 에세이 주제</span>
+              </div>
+              
+              {isAdmin && !isEditing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditTheme(promptData.theme);
+                    setEditDesc(promptData.description);
+                    setIsEditing(true);
+                  }}
+                  style={styles.adminEditBtn}
+                >
+                  📝 주제 수정
+                </button>
+              )}
             </div>
           </div>
           
-          <h2 style={styles.promptTheme} className="serif-title">
-            {promptData.theme}
-          </h2>
-          
-          <p style={styles.promptDesc}>
-            {promptData.description}
-          </p>
+          {isEditing ? (
+            <div style={styles.editForm}>
+              <div style={styles.editInputGroup}>
+                <label style={styles.editLabel}>주제 타이틀 (Theme)</label>
+                <input
+                  type="text"
+                  value={editTheme}
+                  onChange={(e) => setEditTheme(e.target.value)}
+                  style={styles.editInput}
+                  maxLength={50}
+                  placeholder="새로운 에세이 주제 타이틀 입력..."
+                />
+              </div>
+              
+              <div style={styles.editInputGroup}>
+                <label style={styles.editLabel}>주제 상세 설명 (Description)</label>
+                <textarea
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  style={styles.editTextarea}
+                  maxLength={200}
+                  placeholder="새로운 에세이 첫 시작점 및 상세 설명 입력..."
+                />
+              </div>
+              
+              <div style={styles.editActionRow}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!editTheme.trim() || !editDesc.trim()) {
+                      alert('주제 타이틀과 상세 설명을 모두 입력해 주세요.');
+                      return;
+                    }
+                    if (onUpdatePrompt) {
+                      onUpdatePrompt(editTheme.trim(), editDesc.trim());
+                    }
+                    setIsEditing(false);
+                  }}
+                  style={styles.editSaveBtn}
+                >
+                  💾 저장 완료
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  style={styles.editCancelBtn}
+                >
+                  ❌ 취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h2 style={styles.promptTheme} className="serif-title">
+                {promptData.theme}
+              </h2>
+              
+              <p style={styles.promptDesc}>
+                {promptData.description}
+              </p>
+            </>
+          )}
 
           <div style={styles.metaRow} data-guide-label="참여 통계 및 인디케이터 (HeroCover - Stats Row)">
             <div style={styles.metaItem}>
@@ -300,6 +387,86 @@ const styles: Record<string, React.CSSProperties> = {
   actionBtn: {
     alignSelf: 'flex-start',
     boxShadow: '0 4px 14px rgba(255, 76, 41, 0.15)',
+  },
+  adminEditBtn: {
+    backgroundColor: 'var(--text-primary)',
+    color: 'var(--bg-primary)',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '0.25rem 0.6rem',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  editForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+    width: '100%',
+  },
+  editInputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+  },
+  editLabel: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    color: '#8D6E63',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  editInput: {
+    width: '100%',
+    padding: '0.6rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid var(--grid-line)',
+    backgroundColor: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    fontSize: '0.9rem',
+    fontFamily: 'var(--font-sans)',
+  },
+  editTextarea: {
+    width: '100%',
+    height: '100px',
+    padding: '0.6rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid var(--grid-line)',
+    backgroundColor: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    fontSize: '0.85rem',
+    fontFamily: 'var(--font-sans)',
+    resize: 'none',
+    lineHeight: '1.5',
+  },
+  editActionRow: {
+    display: 'flex',
+    gap: '0.5rem',
+    marginTop: '0.5rem',
+  },
+  editSaveBtn: {
+    backgroundColor: 'var(--accent-orange)',
+    color: '#0A1128',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  editCancelBtn: {
+    backgroundColor: 'transparent',
+    color: '#8D6E63',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '6px',
+    padding: '0.5rem 1rem',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
   },
 };
 

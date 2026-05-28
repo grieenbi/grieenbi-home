@@ -171,6 +171,15 @@ function App() {
     }));
   };
 
+  // Handler: Update Relay Essay Topic (Admin only)
+  const handleUpdatePrompt = (newTheme: string, newDescription: string) => {
+    setPromptData(prev => ({
+      ...prev,
+      theme: newTheme,
+      description: newDescription
+    }));
+  };
+
   // Handler: Hero button click, scroll to relay form
   const handleJoinClick = () => {
     const el = document.getElementById('relay');
@@ -196,6 +205,8 @@ function App() {
       <HeroCover 
         promptData={promptData} 
         onJoinClick={handleJoinClick} 
+        isAdmin={currentUser !== null && (currentUser.email === 'foodyheo@gmail.com' || currentUser.email === 'grieenbi@example.com')}
+        onUpdatePrompt={handleUpdatePrompt}
       />
 
       {/* Main Grid: Single Column Relay Essay Layout */}
