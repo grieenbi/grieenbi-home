@@ -190,6 +190,7 @@ function App() {
         onLogout={handleLogout}
         isGuideMode={isGuideMode}
         onToggleGuideMode={() => setIsGuideMode(prev => !prev)}
+        isAdmin={currentUser !== null && (currentUser.email === 'foodyheo@gmail.com' || currentUser.email === 'grieenbi@example.com')}
       />
       
       <HeroCover 

@@ -9,6 +9,7 @@ interface HeaderProps {
   onLogout: () => void;
   isGuideMode: boolean;
   onToggleGuideMode: () => void;
+  isAdmin?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -18,7 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onLoginClick,
   onLogout,
   isGuideMode,
-  onToggleGuideMode
+  onToggleGuideMode,
+  isAdmin = false
 }) => {
   const currentDate = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -59,20 +61,22 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           
           {/* Guide Mode Toggle Button */}
-          <button 
-            type="button"
-            onClick={onToggleGuideMode} 
-            style={{
-              ...styles.guideBtn,
-              backgroundColor: isGuideMode ? 'var(--accent-orange)' : 'transparent',
-              color: isGuideMode ? '#0A1128' : 'var(--text-primary)',
-              borderColor: isGuideMode ? 'var(--accent-orange)' : 'var(--grid-line)'
-            }} 
-            title={isGuideMode ? '영역 가이드 끄기' : '영역 가이드 켜기'}
-            className="header-guide-toggle"
-          >
-            <span>{isGuideMode ? '🔍 가이드 ON' : '🔍 가이드'}</span>
-          </button>
+          {isAdmin && (
+            <button 
+              type="button"
+              onClick={onToggleGuideMode} 
+              style={{
+                ...styles.guideBtn,
+                backgroundColor: isGuideMode ? 'var(--accent-orange)' : 'transparent',
+                color: isGuideMode ? '#0A1128' : 'var(--text-primary)',
+                borderColor: isGuideMode ? 'var(--accent-orange)' : 'var(--grid-line)'
+              }} 
+              title={isGuideMode ? '영역 가이드 끄기' : '영역 가이드 켜기'}
+              className="header-guide-toggle"
+            >
+              <span>{isGuideMode ? '🔍 가이드 ON' : '🔍 가이드'}</span>
+            </button>
+          )}
 
           <button 
             onClick={toggleTheme} 
