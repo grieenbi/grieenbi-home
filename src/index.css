@@ -1,0 +1,253 @@
+/* Design Tokens & System Reset */
+
+:root {
+  /* Color Palette - BCDME Inspired Premium Corporate & Editorial Theme */
+  --bg-primary: #FFFFFF;       /* Crisp Studio White */
+  --bg-secondary: #F4F6F9;     /* Light Muted Cool Gray */
+  --bg-tertiary: #E9ECF0;      /* Slightly Darker Cool Slate */
+  --grid-line: #DCE1E7;        /* Clean Professional Linen Line */
+  
+  --text-primary: #0A1128;     /* Ultimate Deep Tech Navy */
+  --text-secondary: #3C485E;   /* Professional Medium Slate Navy */
+  --text-tertiary: #6C7A8F;    /* Soft Muted Gray Navy */
+  
+  --accent-green: #002C6C;     /* BCDME Deep Identity Royal Navy */
+  --accent-green-light: rgba(0, 44, 108, 0.06);
+  --accent-orange: #FCB900;    /* BCDME Glowing Amber Gold */
+  --accent-orange-light: rgba(252, 185, 0, 0.08);
+  
+  --card-shadow: 0 4px 20px rgba(10, 17, 40, 0.015);
+  --card-shadow-hover: 0 12px 30px rgba(10, 17, 40, 0.045);
+  
+  /* Typography */
+  --font-serif: 'Lora', 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  
+  /* Transitions */
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-fast: all 0.15s ease-in-out;
+}
+
+/* Dark Mode Palette Option - BCDME Deep Midnight Theme */
+[data-theme="dark"] {
+  --bg-primary: #040D21;       /* Deep Midnight Abyss */
+  --bg-secondary: #0A1630;     /* Deep Ocean Navy */
+  --bg-tertiary: #132448;      /* Muted Tech Cobalt */
+  --grid-line: #1D3461;        /* Dark Slate Navy Line */
+  
+  --text-primary: #F0F4FF;     /* Crisp Sky White */
+  --text-secondary: #9DB4DB;   /* Soft Ice Blue */
+  --text-tertiary: #6A86B4;    /* Slate Blue Mute */
+  
+  --accent-green: #00A3E0;     /* Glowing Cyber Cyan Blue */
+  --accent-green-light: rgba(0, 163, 224, 0.12);
+  --accent-orange: #FCB900;    /* Amber Gold Accent */
+  --accent-orange-light: rgba(252, 185, 0, 0.12);
+  
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.serif-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* Web Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--grid-line);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+/* Custom Interactive Utilities */
+.grid-border-layout {
+  display: grid;
+  border-top: 1px solid var(--grid-line);
+  border-left: 1px solid var(--grid-line);
+}
+
+.grid-border-cell {
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+  padding: 2.5rem;
+  background: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .grid-border-cell {
+    padding: 1.5rem;
+  }
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-green {
+  background-color: var(--accent-green-light);
+  color: var(--accent-green);
+}
+
+.badge-orange {
+  background-color: var(--accent-orange-light);
+  color: var(--accent-orange);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition-fast);
+  border: 1px solid var(--text-primary);
+}
+
+.btn-primary:hover {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--grid-line);
+  transition: var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+/* ==========================================
+   🔍 영역 가이드 모드 (Aesthetic Layout Inspector Mode)
+   ========================================== */
+.guide-mode-active [data-guide-label] {
+  position: relative !important;
+  outline: 1.5px dashed var(--accent-orange) !important;
+  outline-offset: -1px !important;
+  transition: outline-color 0.2s ease !important;
+}
+
+.guide-mode-active [data-guide-label]:hover {
+  outline-color: var(--accent-green) !important;
+  outline-style: solid !important;
+}
+
+.guide-mode-active [data-guide-label]::before {
+  content: "📍 " attr(data-guide-label);
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.65rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid var(--grid-line);
+  box-shadow: 0 4px 15px rgba(10, 17, 40, 0.2);
+  z-index: 999999;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  line-height: 1.2;
+}
+
+.guide-mode-active [data-guide-label]:hover::before {
+  opacity: 1;
+  background-color: var(--accent-green);
+  color: #FFFFFF;
+  border-color: var(--accent-orange);
+}
+

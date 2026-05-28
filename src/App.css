@@ -1,0 +1,215 @@
+/* Extra Core Animations & Layout Responsive Adjustments */
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 76, 41, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 76, 41, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 76, 41, 0);
+  }
+}
+
+/* Ensure smooth backface visibility for 3D flip card */
+#generator [style*="perspective"] {
+  position: relative;
+}
+
+#generator [style*="transformStyle"] {
+  transform-style: preserve-3d;
+}
+
+#generator [style*="backfaceVisibility"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Interactive custom focus states */
+input:focus, textarea:focus {
+  border-color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+}
+
+/* Pulse animation class */
+.pulse-active {
+  animation: pulse 2s infinite;
+}
+
+/* Micro interaction for hearts and likes */
+.interactive-like-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-like-btn:active svg {
+  transform: scale(1.4);
+}
+
+.interactive-like-btn svg {
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Fine-tune fine grid lines on responsive layout */
+@media (max-width: 900px) {
+  /* Break the split section */
+  main[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Remove side border between columns and replace with bottom border */
+  main > div:first-child {
+    border-right: none !important;
+    border-bottom: 1px solid var(--grid-line) !important;
+  }
+}
+
+/* Smooth Fade in on mount */
+.fade-in-on-load {
+  opacity: 0;
+  animation: fadeInEffect 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fadeInEffect {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Highly Polish Mobile & Tablet Responsive Overrides */
+@media (max-width: 768px) {
+  /* Header Responsive */
+  .header-topbar {
+    padding: 0.75rem 1rem !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  .header-logo-text {
+    font-size: 2rem !important;
+  }
+  .header-subtitle-text {
+    font-size: 0.8rem !important;
+    letter-spacing: 0.08em !important;
+  }
+  .header-nav {
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  .header-nav a {
+    font-size: 0.75rem !important;
+  }
+  .header-nav span {
+    display: none !important; /* Hide dividers for clean text flow on mobile wrap */
+  }
+
+  /* Hero Cover Responsive */
+  #hero h2 {
+    font-size: 1.8rem !important;
+  }
+  #hero button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Relay Essay & Input Form Responsive */
+  #relay form input, 
+  #relay form textarea, 
+  #relay form button {
+    width: 100% !important;
+  }
+  #relay .input-group-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  #relay .essayPaper {
+    padding: 1.5rem !important;
+  }
+  
+  /* Mobile Tooltip friendly touches - Tap target expansion */
+  .relay-sentence-span {
+    padding: 0.2rem 0.4rem !important;
+    margin-bottom: 0.25rem !important;
+    border-bottom: 1px dotted var(--grid-line) !important;
+  }
+  /* Mobile touch tooltip persistence via active/hover on touch */
+  .relay-sentence-span:active .sentence-tooltip {
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(-6px) !important;
+    pointer-events: auto !important;
+  }
+
+  /* Writer's Live Feed Mobile Touch Up */
+  #workshop .logCard {
+    padding: 1.25rem !important;
+  }
+  #workshop .commentFormRow {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+  #workshop .commentAuthorInput {
+    width: 100% !important;
+  }
+  #workshop .commentSubmitBtn {
+    width: 100% !important;
+  }
+
+  /* Inspiration Generator Mobile Card Scale Down for iPhone SE compatibility */
+  #generator .perspectiveWrapper {
+    width: 100% !important;
+    max-width: 300px !important;
+    height: 480px !important;
+  }
+  #generator .flipCard {
+    width: 100% !important;
+  }
+  #generator .cardBackActions {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  #generator .actionBtnTextPrimary, 
+  #generator .actionBtnText {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Archive Fullscreen overlay for mobile native feel */
+  #archive div[style*="modalContent"] {
+    max-width: 100% !important;
+    height: 100% !important;
+  }
+  #archive div[style*="modalArticleContent"] {
+    padding: 1.5rem !important;
+  }
+  #archive div[style*="sparksSection"] {
+    padding: 1.5rem !important;
+  }
+  #archive .quoteCard {
+    padding: 1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  #archive .quoteDesc {
+    font-size: 0.95rem !important;
+  }
+  #archive .sparkFormRow {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+  #archive .sparkAuthorInput {
+    width: 100% !important;
+  }
+  #archive .sparkSubmitBtn {
+    width: 100% !important;
+    padding: 0.6rem !important;
+  }
+}
