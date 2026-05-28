@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Globe, Link2, ArrowUp } from 'lucide-react';
+import { Mail, ArrowUp } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const handleScrollToTop = () => {
@@ -34,8 +34,18 @@ export const Footer: React.FC = () => {
         <div style={styles.footerCell}>
           <span style={styles.colLabel}>CONNECTION</span>
           <div style={styles.contactRow}>
+            <Mail size={14} style={styles.icon} />
             <a href="mailto:foodyheo@gmail.com" style={styles.link}>foodyheo@gmail.com</a>
           </div>
+          <button 
+            type="button"
+            onClick={handleScrollToTop} 
+            className="btn-primary" 
+            style={styles.scrollTopBtn}
+          >
+            <ArrowUp size={14} style={{ marginRight: '0.25rem' }} />
+            <span>위로 가기</span>
+          </button>
         </div>
       </div>
 
