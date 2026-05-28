@@ -5,6 +5,7 @@ import { RelayEssay } from './components/RelayEssay';
 import { Generator } from './components/Generator';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
+import { MyPageModal } from './components/MyPageModal';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -34,6 +35,7 @@ function App() {
   // Auth State
   const [currentUser, setCurrentUser] = useState<{ nickname: string; email: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMyPageOpen, setIsMyPageOpen] = useState(false);
 
   // Monitor Firebase Authentication State
   useEffect(() => {
@@ -110,6 +112,21 @@ function App() {
     } catch (e) {
       console.error(e);
     }
+    setCurrentUser(null);
+    localStorage.removeItem('grieenbi-current-user');
+  };
+
+  const handleProfileUpdate = (newNickname: string) => {
+    if (currentUser) {
+      const updatedUser = { ...currentUser, nickname: newNickname };
+      setCurrentUser(updatedUser);
+      if (currentUser.email === 'grieenbi@example.com') {
+        localStorage.setItem('grieenbi-current-user', JSON.stringify(updatedUser));
+      }
+    }
+  };
+
+  const handleWithdrawSuccess = () => {
     setCurrentUser(null);
     localStorage.removeItem('grieenbi-current-user');
   };
@@ -196,6 +213,7 @@ function App() {
         toggleTheme={toggleTheme} 
         currentUser={currentUser}
         onLoginClick={() => setIsAuthModalOpen(true)}
+        onMyPageClick={() => setIsMyPageOpen(true)}
         onLogout={handleLogout}
         isGuideMode={isGuideMode}
         onToggleGuideMode={() => setIsGuideMode(prev => !prev)}
@@ -241,6 +259,15 @@ function App() {
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
         onAuthSuccess={handleAuthSuccess} 
+      />
+
+      {/* My Page Modal */}
+      <MyPageModal
+        isOpen={isMyPageOpen}
+        onClose={() => setIsMyPageOpen(false)}
+        currentUser={currentUser}
+        onProfileUpdate={handleProfileUpdate}
+        onWithdrawSuccess={handleWithdrawSuccess}
       />
     </div>
   );

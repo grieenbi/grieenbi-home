@@ -6,6 +6,7 @@ interface HeaderProps {
   toggleTheme: () => void;
   currentUser: { nickname: string; email: string } | null;
   onLoginClick: () => void;
+  onMyPageClick: () => void;
   onLogout: () => void;
   isGuideMode: boolean;
   onToggleGuideMode: () => void;
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   toggleTheme, 
   currentUser,
   onLoginClick,
+  onMyPageClick,
   onLogout,
   isGuideMode,
   onToggleGuideMode,
@@ -39,7 +41,21 @@ export const Header: React.FC<HeaderProps> = ({
         <div style={styles.userActions} className="header-user-actions" data-guide-label="회원 및 도구 제어 섹션 (Header - User & Controls)">
           {currentUser ? (
             <div style={styles.userSession} className="header-user-session">
-              <span style={styles.userName}>✒️ <strong>{currentUser.nickname}</strong> 님</span>
+              <span 
+                style={{ ...styles.userName, cursor: 'pointer' }} 
+                onClick={onMyPageClick}
+                title="클릭하여 프로필 설정 열기"
+              >
+                ✒️ <strong>{currentUser.nickname}</strong> 님
+              </span>
+              <span style={styles.userDivider}>|</span>
+              <button 
+                type="button" 
+                onClick={onMyPageClick} 
+                style={{ ...styles.authLinkBtn, color: 'var(--accent-orange)' }}
+              >
+                내 작업실
+              </button>
               <span style={styles.userDivider}>|</span>
               <button 
                 type="button" 
