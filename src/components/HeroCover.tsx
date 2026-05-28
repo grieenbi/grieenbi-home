@@ -1,45 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, Quote } from 'lucide-react';
-import type { RelayPrompt, EssaySentence } from '../data/initialData';
+import type { RelayPrompt } from '../data/initialData';
 
 interface HeroCoverProps {
   promptData: RelayPrompt;
   onJoinClick: () => void;
   isAdmin?: boolean;
   onUpdatePrompt?: (theme: string, description: string) => void;
+  onShowReaderProfile?: (nickname: string) => void;
 }
-
-const getDynamicFontSize = (text: string) => {
-  const len = text.length;
-  if (len <= 15) return '1.8rem';
-  if (len <= 25) return '1.5rem';
-  if (len <= 35) return '1.25rem';
-  if (len <= 45) return '1.1rem';
-  return '0.95rem';
-};
-
-const getDynamicFontSizeMobile = (text: string) => {
-  const len = text.length;
-  if (len <= 15) return '1.25rem';
-  if (len <= 25) return '1.1rem';
-  if (len <= 35) return '0.95rem';
-  if (len <= 45) return '0.85rem';
-  return '0.75rem';
-};
 
 export const HeroCover: React.FC<HeroCoverProps> = ({ 
   promptData, 
   onJoinClick,
   isAdmin = false,
-  onUpdatePrompt
+  onUpdatePrompt,
+  onShowReaderProfile
 }) => {
   const bestSentences = promptData.sentences.filter(s => s.likes >= 10);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTheme, setEditTheme] = useState(promptData.theme);
   const [editDesc, setEditDesc] = useState(promptData.description);
+  const [hoveredMasterpieceId, setHoveredMasterpieceId] = useState<string | null>(null);
+
+  const displaySentences = bestSentences.length > 0 ? bestSentences : promptData.sentences.slice(0, 5);
+  const duplicatedMasterpieces = [...displaySentences, ...displaySentences];
 
   // Sync edits if promptData changes from outside
   useEffect(() => {
@@ -47,16 +33,7 @@ export const HeroCover: React.FC<HeroCoverProps> = ({
     setEditDesc(promptData.description);
   }, [promptData.theme, promptData.description]);
 
-  // Rotate best sentences if multiple exist and not paused
-  useEffect(() => {
-    if (bestSentences.length <= 1 || isPaused) return;
-    const interval = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % bestSentences.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [bestSentences.length, isPaused]);
 
-  const activeSentence: EssaySentence | undefined = bestSentences[activeIndex] || promptData.sentences[0];
 
   return (
     <section id="hero" style={styles.heroSection} data-guide-label="히어로 커버 섹션 (HeroCover)">
@@ -174,51 +151,75 @@ export const HeroCover: React.FC<HeroCoverProps> = ({
             <div style={styles.lineDecorative} />
           </div>
           
-          <div 
-            style={{
-              ...styles.quoteWrapper,
-              cursor: 'pointer',
-              opacity: isPaused ? 0.9 : 1,
-            }}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            title="마우스를 올리면 문장 순환이 일시정지됩니다."
-            data-guide-label="마스터피스 롤링 텍스트 영역 (HeroCover - Rolling Text)"
-          >
-            <Quote size={40} style={styles.quoteIcon} />
-            <AnimatePresence mode="wait">
-              {activeSentence && (
-                    <motion.div
-      key={activeSentence.id}
-      initial={{ opacity: 0, y: 30 }} // start slightly below
-      animate={{ opacity: 1, y: 0 }} // slide up into view
-      exit={{ opacity: 0, y: -30 }} // exit upwards
-      transition={{ duration: 0.9, ease: [0.25, 0.8, 0.25, 1] }}
-      style={styles.sentenceContainer}
-    >
-                  <p 
-                    className="serif-title best-sentence-text-dynamic" 
-                    style={{
-                      ...styles.bestSentenceText,
-                      '--best-font-size-desktop': getDynamicFontSize(activeSentence.content),
-                      '--best-font-size-mobile': getDynamicFontSizeMobile(activeSentence.content),
-                      marginBottom: activeSentence.content.length > 30 ? '0.8rem' : '1.8rem'
-                    } as React.CSSProperties}
+          <div className="master-marquee-viewport" data-guide-label="마스터피스 롤링 텍스트 영역 (HeroCover - Rolling Text)">
+            <div 
+              className="master-marquee-track"
+              style={{
+                animationPlayState: hoveredMasterpieceId !== null ? 'paused' : 'running'
+              }}
+            >
+              {duplicatedMasterpieces.map((sentence, index, arr) => {
+                const itemsCount = arr.length / 2;
+                const key = `${sentence.id}-master-${index >= itemsCount ? '2' : '1'}`;
+                return (
+                  <div
+                    key={key}
+                    className="master-sentence-block"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHoveredMasterpieceId(prev => prev === sentence.id ? null : sentence.id);
+                    }}
                   >
-                    "{activeSentence.content}"
-                  </p>
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    style={styles.authorBadge}
-                  >
-                    <span style={styles.authorLine} />
-                    <span style={styles.authorName}>독자 {activeSentence.author} 님의 문장</span>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <Quote size={24} style={{ color: 'rgba(252, 185, 0, 0.22)', marginBottom: '0.4rem', display: 'block' }} />
+                    <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginBottom: '0.4rem', color: '#F5F2EB', fontSize: '1.05rem', wordBreak: 'keep-all', lineHeight: '1.5' }}>
+                      "{sentence.content}"
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.4rem' }}>
+                      <span style={{ width: '12px', height: '1px', backgroundColor: 'var(--accent-orange)' }} />
+                      <span style={{ fontSize: '0.72rem', color: '#D7CCC8', fontWeight: 600 }}>
+                        독자 {sentence.author} 님
+                      </span>
+                    </div>
+
+                    {/* Popover metadata speech card on hover/click */}
+                    <AnimatePresence>
+                      {hoveredMasterpieceId === sentence.id && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 10, scale: 0.95, x: '-50%' }}
+                          animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+                          exit={{ opacity: 0, y: 8, scale: 0.95, x: '-50%' }}
+                          transition={{ duration: 0.12, ease: 'easeOut' }}
+                          className="sentence-tooltip"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span 
+                            className="tooltip-author"
+                            style={{
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                              color: 'var(--accent-orange)',
+                              fontWeight: 700
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onShowReaderProfile) onShowReaderProfile(sentence.author);
+                            }}
+                            title={`${sentence.author} 작가의 프로필 및 작품집 보기`}
+                          >
+                            BY. {sentence.author}
+                          </span>
+                          <span style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.2rem' }}>
+                            누적 공감: ❤️ {sentence.likes}개
+                          </span>
+                          {/* Tooltip Triangle Arrow */}
+                          <span className="tooltip-arrow" />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           
           <div style={styles.coverFooter}>
@@ -480,7 +481,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-// Add styles injection in the head for responsive behavior since inline styles have limits
 if (typeof document !== 'undefined') {
   const styleTag = document.createElement('style');
   styleTag.textContent = `
@@ -494,6 +494,84 @@ if (typeof document !== 'undefined') {
       100% {
         box-shadow: 0 0 0 0 rgba(255, 76, 41, 0);
       }
+    }
+    @keyframes verticalMarqueeMaster {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+    .master-marquee-viewport {
+      height: 240px;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+      margin: 1.5rem 0;
+    }
+    .master-marquee-track {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: verticalMarqueeMaster 35s linear infinite;
+    }
+    .master-sentence-block {
+      display: block;
+      padding: 1.1rem 1.4rem;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 4px solid var(--accent-orange);
+      border-radius: 8px;
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      line-height: 1.6;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition-fast);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
+      word-break: keep-all;
+      color: #F5F2EB;
+      text-align: left;
+    }
+    .master-sentence-block:hover {
+      border-color: var(--accent-orange);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+    .sentence-tooltip {
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      background-color: var(--text-primary);
+      color: var(--bg-primary);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      border: 1px solid var(--grid-line);
+      pointer-events: auto;
+      transform: translateX(-50%);
+    }
+    .tooltip-arrow {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--text-primary);
+    }
+    .tooltip-author {
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
     @media (max-width: 900px) {
       #hero > div {

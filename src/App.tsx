@@ -415,6 +415,7 @@ function App() {
         onJoinClick={handleJoinClick} 
         isAdmin={currentUser !== null && (currentUser.email === 'foodyheo@gmail.com' || currentUser.email === 'grieenbi@example.com')}
         onUpdatePrompt={handleUpdatePrompt}
+        onShowReaderProfile={handleShowReaderProfile}
       />
 
       {/* Main Grid: Single Column Relay Essay Layout */}
