@@ -10,20 +10,20 @@ interface HeroCoverProps {
 
 const getDynamicFontSize = (text: string) => {
   const len = text.length;
-  if (len <= 15) return '2.0rem';
-  if (len <= 25) return '1.65rem';
-  if (len <= 35) return '1.4rem';
-  if (len <= 45) return '1.2rem';
-  return '1.05rem';
+  if (len <= 15) return '1.8rem';
+  if (len <= 25) return '1.5rem';
+  if (len <= 35) return '1.25rem';
+  if (len <= 45) return '1.1rem';
+  return '0.95rem';
 };
 
 const getDynamicFontSizeMobile = (text: string) => {
   const len = text.length;
-  if (len <= 15) return '1.4rem';
-  if (len <= 25) return '1.2rem';
-  if (len <= 35) return '1.05rem';
-  if (len <= 45) return '0.95rem';
-  return '0.85rem';
+  if (len <= 15) return '1.25rem';
+  if (len <= 25) return '1.1rem';
+  if (len <= 35) return '0.95rem';
+  if (len <= 45) return '0.85rem';
+  return '0.75rem';
 };
 
 export const HeroCover: React.FC<HeroCoverProps> = ({ promptData, onJoinClick }) => {
