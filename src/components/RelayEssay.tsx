@@ -27,6 +27,8 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
   const [error, setError] = useState('');
   const nonSpaceLength = content.replace(/\s/g, '').length;
   const [hoveredSentenceId, setHoveredSentenceId] = useState<string | null>(null);
+  const [showAllArchive, setShowAllArchive] = useState(false);
+  const [archiveSortBy, setArchiveSortBy] = useState<'latest' | 'likes'>('likes');
 
   React.useEffect(() => {
     if (externalSentence) {
@@ -146,6 +148,167 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
           <span style={styles.cursorBlink}>_</span>
         </div>
       </div>
+
+      {/* 📜 Exhibition Hall Trigger Button */}
+      <div style={styles.archiveActionRow} data-guide-label="독자 문장 전시장 버튼 (RelayEssay - Archive Toggle Button)">
+        <button
+          type="button"
+          onClick={() => setShowAllArchive(prev => !prev)}
+          style={{
+            ...styles.archiveToggleBtn,
+            borderColor: showAllArchive ? 'var(--accent-orange)' : 'var(--grid-line)',
+            color: showAllArchive ? 'var(--accent-orange)' : 'var(--text-secondary)'
+          }}
+          className="btn-secondary"
+        >
+          <span>
+            {showAllArchive ? '📖 모든 이야기 조각 닫기' : `📜 독자 문장 전시장 읽기 (총 ${promptData.sentences.length}개)`}
+          </span>
+          <motion.span
+            animate={{ rotate: showAllArchive ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ display: 'inline-flex' }}
+          >
+            ▼
+          </motion.span>
+        </button>
+      </div>
+
+      {/* 🔮 All Sentences Exhibition Grid Container */}
+      <AnimatePresence>
+        {showAllArchive && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            style={styles.archiveContainer}
+            data-guide-label="독자 문장 전시장 (RelayEssay - Exhibition Hall)"
+          >
+            {/* Sorting controls */}
+            <div style={styles.archiveFilterBar}>
+              <span style={styles.archiveFilterLabel}>문장 배열 방식 :</span>
+              <div style={styles.archiveFilterButtons}>
+                <button
+                  type="button"
+                  onClick={() => setArchiveSortBy('likes')}
+                  style={{
+                    ...styles.filterTab,
+                    backgroundColor: archiveSortBy === 'likes' ? 'var(--text-primary)' : 'transparent',
+                    color: archiveSortBy === 'likes' ? 'var(--bg-primary)' : 'var(--text-secondary)',
+                    borderColor: archiveSortBy === 'likes' ? 'var(--text-primary)' : 'var(--grid-line)',
+                  }}
+                >
+                  🔥 인기 공감순
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArchiveSortBy('latest')}
+                  style={{
+                    ...styles.filterTab,
+                    backgroundColor: archiveSortBy === 'latest' ? 'var(--text-primary)' : 'transparent',
+                    color: archiveSortBy === 'latest' ? 'var(--bg-primary)' : 'var(--text-secondary)',
+                    borderColor: archiveSortBy === 'latest' ? 'var(--text-primary)' : 'var(--grid-line)',
+                  }}
+                >
+                  ✨ 최신 등록순
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of manuscript cards */}
+            {promptData.sentences.length === 0 ? (
+              <div style={styles.emptyArchive}>
+                아직 전시장에 등록된 이야기 조각이 없습니다. 첫 문장의 주인공이 되어 보세요!
+              </div>
+            ) : (
+              <div style={styles.archiveGrid}>
+                {[...promptData.sentences]
+                  .sort((a, b) => {
+                    if (archiveSortBy === 'likes') {
+                      return b.likes - a.likes;
+                    } else {
+                      const timeA = new Date(a.createdAt || '').getTime();
+                      const timeB = new Date(b.createdAt || '').getTime();
+                      return timeB - timeA;
+                    }
+                  })
+                  .map((sentence) => {
+                    // Check if it is a Best sentence (top 5 by likes)
+                    const sortedByLikes = [...promptData.sentences].sort((a, b) => b.likes - a.likes);
+                    const best5Ids = sortedByLikes.slice(0, 5).map(s => s.id);
+                    const isBest = best5Ids.includes(sentence.id);
+
+                    // Formatted date
+                    let formattedDate = '';
+                    if (sentence.createdAt) {
+                      const dateObj = new Date(sentence.createdAt);
+                      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                      const day = String(dateObj.getDate()).padStart(2, '0');
+                      const hours = String(dateObj.getHours()).padStart(2, '0');
+                      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                      formattedDate = `${month}-${day} ${hours}:${minutes}`;
+                    }
+
+                    return (
+                      <motion.div
+                        key={sentence.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.25 }}
+                        style={{
+                          ...styles.archiveCard,
+                          borderColor: isBest ? 'var(--accent-orange)' : 'var(--grid-line)',
+                        }}
+                      >
+                        {/* Quotes design background decoration */}
+                        <span style={styles.cardQuoteIcon}>“</span>
+                        
+                        {/* Sentence content */}
+                        <p className="serif-title" style={styles.cardText}>
+                          {sentence.content}
+                        </p>
+
+                        {/* Card metadata footer */}
+                        <div style={styles.cardFooter}>
+                          <div style={styles.cardAuthorRow}>
+                            <span style={styles.cardAuthor}>✒️ {sentence.author}</span>
+                            {formattedDate && <span style={styles.cardDate}>{formattedDate}</span>}
+                          </div>
+                          
+                          <div style={styles.cardActions}>
+                            {isBest && (
+                              <span style={styles.bestBadgeMiniGrid}>
+                                👑 베스트 5
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onLikeSentence(sentence.id)}
+                              style={styles.cardLikeBtn}
+                              className="btn-card-like"
+                            >
+                              <Heart
+                                size={13}
+                                fill={sentence.likes > 0 ? 'var(--accent-orange)' : 'transparent'}
+                                color={sentence.likes > 0 ? 'var(--accent-orange)' : 'var(--text-secondary)'}
+                              />
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: sentence.likes > 0 ? 'var(--accent-orange)' : 'var(--text-secondary)' }}>
+                                {sentence.likes}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Writing form */}
       <div style={styles.formContainer} data-guide-label="문장 기고 입력 폼 (RelayEssay - Input Form)">
@@ -447,6 +610,158 @@ const styles: Record<string, React.CSSProperties> = {
   submitBtn: {
     alignSelf: 'flex-end',
   },
+  archiveActionRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: '0.5rem',
+  },
+  archiveToggleBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--grid-line)',
+    padding: '0.75rem 2rem',
+    borderRadius: '30px',
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+    boxShadow: '0 4px 12px rgba(10, 17, 40, 0.04)',
+  },
+  archiveContainer: {
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '12px',
+    padding: '2rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+    overflow: 'hidden',
+  },
+  archiveFilterBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px dashed var(--grid-line)',
+    paddingBottom: '1rem',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  archiveFilterLabel: {
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    color: 'var(--text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  archiveFilterButtons: {
+    display: 'flex',
+    gap: '0.5rem',
+  },
+  filterTab: {
+    border: '1px solid var(--grid-line)',
+    padding: '0.4rem 1rem',
+    borderRadius: '20px',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  emptyArchive: {
+    textAlign: 'center',
+    color: 'var(--text-tertiary)',
+    fontSize: '0.9rem',
+    padding: '3rem 1rem',
+  },
+  archiveGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '1rem',
+  },
+  archiveCard: {
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--grid-line)',
+    borderRadius: '10px',
+    padding: '1.5rem',
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    minHeight: '160px',
+    boxShadow: '0 2px 8px rgba(10, 17, 40, 0.02)',
+    overflow: 'hidden',
+    transition: 'border-color var(--transition-fast)',
+  },
+  cardQuoteIcon: {
+    position: 'absolute',
+    top: '-15px',
+    left: '10px',
+    fontSize: '4.5rem',
+    fontFamily: 'serif',
+    color: 'var(--grid-line)',
+    opacity: 0.35,
+    userSelect: 'none',
+    pointerEvents: 'none',
+  },
+  cardText: {
+    fontSize: '1.05rem',
+    lineHeight: '1.6',
+    color: 'var(--text-primary)',
+    margin: '0.5rem 0 1.5rem 0',
+    wordBreak: 'keep-all',
+    position: 'relative',
+    zIndex: 1,
+  },
+  cardFooter: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    borderTop: '1px solid var(--grid-line)',
+    paddingTop: '0.75rem',
+    position: 'relative',
+    zIndex: 1,
+  },
+  cardAuthorRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardAuthor: {
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: 'var(--accent-orange)',
+  },
+  cardDate: {
+    fontSize: '0.65rem',
+    color: 'var(--text-tertiary)',
+    fontWeight: 500,
+  },
+  cardActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bestBadgeMiniGrid: {
+    color: 'var(--accent-orange)',
+    fontSize: '0.65rem',
+    fontWeight: 700,
+    backgroundColor: 'var(--accent-orange-light)',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+  },
+  cardLikeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    cursor: 'pointer',
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    transition: 'transform var(--transition-fast)',
+    marginLeft: 'auto',
+  },
 };
 
 if (typeof document !== 'undefined') {
@@ -458,6 +773,12 @@ if (typeof document !== 'undefined') {
     }
     .relay-sentence-span:hover {
       background-color: var(--accent-orange-light);
+    }
+    .btn-card-like:hover {
+      transform: scale(1.15);
+    }
+    .btn-card-like:active {
+      transform: scale(0.9);
     }
   `;
   document.head.appendChild(styleTag);
