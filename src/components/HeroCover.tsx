@@ -339,33 +339,38 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    padding: '3rem',
-    backgroundColor: 'rgba(255, 140, 0, 0.15)', // bright orange with 15% opacity
-    color: '#A1887F', // warm brown for readability
+    padding: '3.5rem 3rem',
+    background: 'linear-gradient(135deg, #0A1128 0%, #002C6C 100%)', // premium deep royal tech navy
+    color: '#F5F2EB', // warm ivory for high-contrast elite editorial tone
+    borderLeft: '5px solid var(--accent-orange)', // striking amber gold left border anchor
+    boxShadow: 'inset -15px 0 35px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(10, 17, 40, 0.08)',
   },
   sparkBadgeContainer: {
     marginBottom: '1.25rem',
   },
   promptTheme: {
-    fontSize: '2.5rem',
-    color: '#8D6E63', // slightly darker brown heading
+    fontSize: '2.6rem',
+    color: 'var(--accent-orange)', // glowing golden theme title
+    textShadow: '0 2px 10px rgba(252, 185, 0, 0.3)', // gold glow to pop out
     marginBottom: '1.5rem',
-    lineHeight: '1.2',
+    lineHeight: '1.25',
+    fontWeight: 700,
   },
   promptDesc: {
-    fontSize: '1rem',
-    lineHeight: '1.7',
-    color: '#8D6E63', // slightly darker brown description
+    fontSize: '1.05rem',
+    lineHeight: '1.75',
+    color: '#E9ECF0', // warm light sky silver for perfect AAA contrast
     marginBottom: '2rem',
     wordBreak: 'keep-all',
+    fontWeight: 500,
   },
   metaRow: {
     display: 'flex',
     gap: '2rem',
     marginBottom: '2.5rem',
-    borderTop: '1px solid var(--grid-line)',
-    borderBottom: '1px solid var(--grid-line)',
-    padding: '1rem 0',
+    borderTop: '1px solid rgba(255, 255, 255, 0.15)', // modern light gold line instead of gray grid line
+    borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+    padding: '1.25rem 0',
   },
   metaItem: {
     display: 'flex',
@@ -375,25 +380,29 @@ const styles: Record<string, React.CSSProperties> = {
   metaLabel: {
     fontSize: '0.7rem',
     textTransform: 'uppercase',
-    color: 'var(--text-tertiary)',
+    color: 'rgba(255, 255, 255, 0.6)', // high contrast readable label
     letterSpacing: '0.05em',
     fontWeight: 600,
   },
   metaValue: {
-    fontSize: '0.85rem',
+    fontSize: '0.88rem',
     fontWeight: 700,
-    color: 'var(--text-primary)',
+    color: '#FFFFFF', // solid pure white
   },
   actionBtn: {
     alignSelf: 'flex-start',
-    boxShadow: '0 4px 14px rgba(255, 76, 41, 0.15)',
+    boxShadow: '0 4px 20px rgba(252, 185, 0, 0.25)', // glowing gold accent shadow
+    backgroundColor: 'var(--accent-orange)', // gold buttons for epic visibility!
+    color: '#0A1128',
+    border: '1px solid var(--accent-orange)',
+    fontWeight: 700,
   },
   adminEditBtn: {
-    backgroundColor: 'var(--text-primary)',
-    color: 'var(--bg-primary)',
-    border: 'none',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
     borderRadius: '4px',
-    padding: '0.25rem 0.6rem',
+    padding: '0.3rem 0.75rem',
     fontSize: '0.75rem',
     fontWeight: 700,
     cursor: 'pointer',
@@ -414,7 +423,7 @@ const styles: Record<string, React.CSSProperties> = {
   editLabel: {
     fontSize: '0.7rem',
     fontWeight: 700,
-    color: '#8D6E63',
+    color: 'var(--accent-orange)', // gold label in edit mode
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
@@ -422,9 +431,9 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     padding: '0.6rem 0.75rem',
     borderRadius: '6px',
-    border: '1px solid var(--grid-line)',
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#FFFFFF',
     fontSize: '0.9rem',
     fontFamily: 'var(--font-sans)',
   },
@@ -433,9 +442,9 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100px',
     padding: '0.6rem 0.75rem',
     borderRadius: '6px',
-    border: '1px solid var(--grid-line)',
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#FFFFFF',
     fontSize: '0.85rem',
     fontFamily: 'var(--font-sans)',
     resize: 'none',
@@ -459,8 +468,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   editCancelBtn: {
     backgroundColor: 'transparent',
-    color: '#8D6E63',
-    border: '1px solid var(--grid-line)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
     borderRadius: '6px',
     padding: '0.5rem 1rem',
     fontSize: '0.8rem',
