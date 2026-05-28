@@ -165,12 +165,12 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
                             <span>{sentence.likes}</span>
                           </button>
 
-                          {isAdmin && onDeleteSentence && (
+                          {(isAdmin || (currentUserNickname && sentence.author === currentUserNickname)) && onDeleteSentence && (
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm('이 독자 문장을 삭제하시겠습니까?')) {
+                                if (window.confirm('이 이야기 조각을 정말 삭제하시겠습니까?')) {
                                   onDeleteSentence(sentence.id);
                                   setHoveredSentenceId(null);
                                 }
@@ -358,6 +358,27 @@ export const RelayEssay: React.FC<RelayEssayProps> = ({
                                 {sentence.likes}
                               </span>
                             </button>
+
+                            {(isAdmin || (currentUserNickname && sentence.author === currentUserNickname)) && onDeleteSentence && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm('이 이야기 조각을 정말 삭제하시겠습니까?')) {
+                                    onDeleteSentence(sentence.id);
+                                  }
+                                }}
+                                style={{
+                                  ...styles.cardLikeBtn,
+                                  color: 'var(--accent-orange)',
+                                  marginLeft: '0.5rem',
+                                }}
+                                className="btn-card-delete"
+                                title="이야기 조각 삭제"
+                              >
+                                <Trash size={13} />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </motion.div>
