@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
             "문장은 보이지 않는 생각의 뼈대이며, 기술은 그것을 실체화하는 단단한 그릇이다."
           </p>
           <p style={styles.desc}>
-            GRIEENBI STUDIO는 글을 사랑하는 이들이 만나 문학적 감수성을 연결하는 인터랙티브 공유 매거진입니다. GRIEENBI(그린비) 는 보고싶은 님 의미의 순우리말 입니다.
+            GRIEENBI STUDIO는 글을 사랑하는 이들이 만나 문학적 감수성을 연결하는 인터랙티브 공유 매거진입니다.
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export const Footer: React.FC = () => {
 
       <div style={styles.bottomBar}>
         <p style={styles.copyright}>
-          © 2026 GRIEENBI STUDIO. All rights reserved. Designed with ultimate aesthetics & tech.
+          © 2026 GRIEENBI STUDIO. All rights reserved. Designed with H&Co.
         </p>
         <span style={styles.edition}>FIRST EDITION // MAY 2026</span>
       </div>
